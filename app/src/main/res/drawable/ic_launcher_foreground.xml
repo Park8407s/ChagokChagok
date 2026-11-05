@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 임시 아이콘: 이어진 8분음표 두 개. 그래픽 리소스 시트가 오면 교체한다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 들보 -->
+    <path android:fillColor="#FFFFC857" android:pathData="M44,34 L72,28 L72,35 L44,41 Z" />
+    <!-- 기둥 -->
+    <path android:fillColor="#FFFFC857" android:pathData="M44,34 h4 v34 h-4 Z" />
+    <path android:fillColor="#FFFFC857" android:pathData="M68,29 h4 v33 h-4 Z" />
+    <!-- 머리 -->
+    <path android:fillColor="#FFFFC857" android:pathData="M38,68 a8,6 0,1 0,16 0 a8,6 0,1 0,-16 0 Z" />
+    <path android:fillColor="#FFFFC857" android:pathData="M62,62 a8,6 0,1 0,16 0 a8,6 0,1 0,-16 0 Z" />
+</vector>

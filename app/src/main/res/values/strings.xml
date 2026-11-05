@@ -1,0 +1,5 @@
+<resources>
+    <!-- 기본(한국어) -->
+    <string name="app_name">오늘의 OST</string>
+    <string name="home_tagline">오늘의 운전이 오늘의 노래가 됩니다</string>
+</resources>
