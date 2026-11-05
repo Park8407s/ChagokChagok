@@ -18,11 +18,79 @@ fun main(args: Array<String>) {
     when (args.getOrNull(0)) {
         "list" -> list(File(args[1]))
         "extract" -> extract(File(args[1]), File(args[2]), args[3])
+        "sf3" -> sf3(args.drop(1))
         else -> {
-            System.err.println("사용법: list <in.sf2> | extract <in.sf2> <out.sf2> <뱅크:프로그램,...>")
+            System.err.println(
+                """
+                사용법:
+                  list <in.sf2>
+                  extract <in.sf2> <out.sf2> <뱅크:프로그램,...>
+                  sf3 <in.sf2> <out.sf3> [--presets 뱅크:프로그램,...] [--quality 6] [--ffmpeg ffmpeg]
+                """.trimIndent()
+            )
             exitProcess(1)
         }
     }
+}
+
+/**
+ * SF2 → SF3 (Ogg Vorbis 압축). --presets 를 주면 그 프리셋만 남긴 뒤 압축한다.
+ * 변환 후 모든 샘플을 다시 풀어서 길이가 원본과 같은지, 신호가 어긋나지 않았는지 확인한다.
+ */
+private fun sf3(args: List<String>) {
+    val input = File(args[0])
+    val output = File(args[1])
+    val opts = args.drop(2).chunked(2).associate { it[0] to it.getOrElse(1) { "" } }
+    val spec = opts["--presets"]
+    val quality = opts["--quality"]?.toDouble() ?: 6.0
+    val vorbis = Vorbis(opts["--ffmpeg"] ?: System.getenv("FFMPEG") ?: "ffmpeg", quality)
+
+    val src = readSf2(input)
+    report(validate(src), what = "원본")
+    val origName = src.info.firstOrNull { it.first == "INAM" }?.let { cString(it.second) } ?: input.nameWithoutExtension
+    val picked = if (spec == null) src else {
+        val rules = parseSpec(spec)
+        subset(src, emptyMap()) { bank, program -> rules.any { it(bank, program) } }
+    }
+    val what = if (spec == null) "all presets" else "presets $spec"
+    println("압축 중: 샘플 ${picked.sampleCount}개, Vorbis 품질 $quality ...")
+
+    val t0 = System.currentTimeMillis()
+    val sf3 = withInfo(
+        toSf3(picked) { _, pcm, rate -> vorbis.encode(pcm, rate) },
+        mapOf(
+            "INAM" to "$origName (TodaysOST${if (spec != null) " subset" else ""} SF3)",
+            "ICMT" to "Derived from ${input.name}: $what, samples compressed to Ogg Vorbis (q$quality) by TodaysOST sf2subset. " +
+                "Instrument and preset parameters are unmodified.",
+        ),
+    )
+    writeSf2(sf3, output)
+    println("압축 완료 (${(System.currentTimeMillis() - t0) / 1000}초)")
+
+    // 다시 읽어서 구조 확인 + 모든 샘플 복원 확인
+    val check = readSf2(output)
+    report(validate(check), what = "결과 구조")
+    val problems = mutableListOf<String>()
+    val snrs = (0 until check.sampleCount).toList().parallelStream().map { i ->
+        val s = check.shdr[i]
+        val orig = picked.shdr[i]
+        val origPcm = picked.smpl.copyOfRange((orig.start * 2).toInt(), (orig.end * 2).toInt())
+        val decoded = vorbis.decode(check.smpl.copyOfRange(s.start.toInt(), s.end.toInt()))
+        val frames = decoded.size / 2
+        synchronized(problems) {
+            // 원본 길이 이상이 복원돼야 한다 (뒤의 여분은 덧붙인 무음)
+            if (frames < origPcm.size / 2) problems += "샘플 ${cString(s.name)}: 길이 ${origPcm.size / 2} → $frames (짧아짐)"
+            if (s.endLoop > frames) problems += "샘플 ${cString(s.name)}: 루프 끝(${s.endLoop})이 길이($frames)를 넘습니다"
+        }
+        snrDb(origPcm, decoded)
+    }.toList().filter { it.isFinite() }.sorted()
+
+    println("원본: ${mb(input.length())}  →  결과: ${mb(output.length())}  (${output.path})")
+    println("프리셋 ${check.presetCount}, 악기 ${check.instCount}, 샘플 ${check.sampleCount}")
+    if (snrs.isNotEmpty()) {
+        println("복원 SNR(참고): 최저 %.1fdB, 중간 %.1fdB".format(snrs.first(), snrs[snrs.size / 2]))
+    }
+    report(problems, what = "샘플 복원")
 }
 
 private fun list(file: File) {

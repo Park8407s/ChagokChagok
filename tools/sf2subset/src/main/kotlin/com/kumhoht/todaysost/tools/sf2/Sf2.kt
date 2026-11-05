@@ -38,6 +38,8 @@ class Shdr(
     val sampleLink: Int, val sampleType: Int,
 ) {
     val isRom: Boolean get() = sampleType and 0x8000 != 0
+    /** SF3: 샘플 데이터가 Ogg Vorbis 로 압축됨. start/end 는 smpl 안의 '바이트' 위치, 루프는 샘플 기준 상대 위치 */
+    val isVorbis: Boolean get() = sampleType and SAMPLE_TYPE_VORBIS != 0
     /** 2=right, 4=left, 8=linked: 짝 샘플이 있는 종류 */
     val isLinked: Boolean get() = !isRom && (sampleType and 0x0E) != 0
 }
@@ -63,6 +65,12 @@ object Gens {
 }
 
 const val MOD_SIZE = 10
+
+/** SF3 변환 때 샘플 뒤에 덧붙이는 무음 길이(프레임) */
+const val SF3_PAD_FRAMES = 1024
+
+/** FluidSynth FLUID_SAMPLETYPE_OGG_VORBIS */
+const val SAMPLE_TYPE_VORBIS = 0x10
 
 fun cString(b: ByteArray): String = b.toString(Charsets.ISO_8859_1).substringBefore('\u0000').trim()
 
@@ -159,7 +167,8 @@ fun validate(sf: Sf2): List<String> {
     for (i in 0 until sf.sampleCount) {
         val s = sf.shdr[i]
         if (s.isRom) continue
-        if (s.end > sampleFrames || s.start > s.end) errs += "샘플 $i(${cString(s.name)}): 범위가 smpl 밖입니다"
+        val limit = if (s.isVorbis) sf.smpl.size.toLong() else sampleFrames.toLong()
+        if (s.end > limit || s.start > s.end) errs += "샘플 $i(${cString(s.name)}): 범위가 smpl 밖입니다"
         if (s.isLinked && s.sampleLink >= sf.sampleCount) errs += "샘플 $i: 없는 짝 샘플 ${s.sampleLink}"
     }
     return errs
@@ -172,6 +181,13 @@ fun validate(sf: Sf2): List<String> {
  * 그 프리셋이 쓰는 악기와 샘플(스테레오 짝 포함)만 따라 남기고, 색인은 모두 새로 매긴다.
  * 샘플 데이터는 남긴 샘플만 이어 붙이며, 규격대로 샘플 뒤에 0 을 46개 넣는다.
  */
+/** INFO 항목 바꾸기 (없으면 덧붙임) */
+fun withInfo(sf: Sf2, overrides: Map<String, String>): Sf2 {
+    val info = sf.info.map { (id, data) -> overrides[id]?.let { id to infoString(it) } ?: (id to data) } +
+        overrides.filterKeys { k -> sf.info.none { it.first == k } }.map { (k, v) -> k to infoString(v) }
+    return Sf2(info, sf.smpl, sf.hasSm24, sf.phdr, sf.pbag, sf.pmod, sf.pgen, sf.inst, sf.ibag, sf.imod, sf.igen, sf.shdr)
+}
+
 fun subset(src: Sf2, infoOverrides: Map<String, String>, keep: (bank: Int, program: Int) -> Boolean): Sf2 {
     require(src.shdr.dropLast(1).none { it.isRom }) { "ROM 샘플이 있는 SF2 는 지원하지 않습니다" }
 
@@ -259,11 +275,48 @@ fun subset(src: Sf2, infoOverrides: Map<String, String>, keep: (bank: Int, progr
     pmod += ByteArray(MOD_SIZE)
 
     // 6) INFO: 원본 저작권 문구는 그대로 두고, 지정한 항목만 바꾸거나 덧붙인다
-    val info = src.info.map { (id, data) ->
-        infoOverrides[id]?.let { id to infoString(it) } ?: (id to data)
-    } + infoOverrides.filterKeys { k -> src.info.none { it.first == k } }.map { (k, v) -> k to infoString(v) }
+    return withInfo(Sf2(src.info, smpl.toByteArray(), false, phdr, pbag, pmod, pgen, inst, ibag, imod, igen, shdr), infoOverrides)
+}
 
-    return Sf2(info, smpl.toByteArray(), false, phdr, pbag, pmod, pgen, inst, ibag, imod, igen, shdr)
+// ───────────────────────────── SF3 변환 ─────────────────────────────
+
+/**
+ * SF2 → SF3: 샘플마다 따로 Ogg Vorbis(모노)로 압축해 smpl 에 이어 붙인다.
+ * FluidSynth(fluid_sffile.c, fluid_defsfont.c) 규칙에 맞춘다:
+ *  - ifil 버전 major = 3
+ *  - shdr start/end = smpl 안의 바이트 위치 (end 는 끝 바로 다음)
+ *  - 루프 위치 = 압축을 푼 샘플 기준 상대 위치(프레임)
+ *  - sampleType 에 0x10 표시
+ * 악기·프리셋 표는 그대로 둔다.
+ */
+fun toSf3(src: Sf2, encode: (index: Int, pcm: ByteArray, sampleRate: Long) -> ByteArray): Sf2 {
+    require(src.shdr.dropLast(1).none { it.isRom || it.isVorbis }) { "ROM 또는 이미 압축된 샘플은 변환할 수 없습니다" }
+    val samples = src.shdr.dropLast(1)
+    val encoded = samples.indices.toList().parallelStream().map { i ->
+        val s = samples[i]
+        // 인코더가 블록 단위로 끝을 반올림하며 마지막 수십~백여 프레임을 잃을 수 있어서,
+        // 뒤에 무음을 덧붙여 원본 길이와 루프 끝이 항상 복원되게 한다. (SF2 규격의 '샘플 뒤 무음 46개'와 같은 취지)
+        val len = ((s.end - s.start) * 2).toInt()
+        val pcm = ByteArray(len + SF3_PAD_FRAMES * 2)
+        src.smpl.copyInto(pcm, 0, (s.start * 2).toInt(), (s.end * 2).toInt())
+        encode(i, pcm, s.sampleRate)
+    }.toList()
+
+    val smpl = ByteArrayOutputStream()
+    val shdr = samples.mapIndexed { i, s ->
+        val start = smpl.size().toLong()
+        smpl.write(encoded[i])
+        Shdr(
+            s.name, start, smpl.size().toLong(),
+            maxOf(0, s.startLoop - s.start), maxOf(0, s.endLoop - s.start),
+            s.sampleRate, s.originalPitch, s.pitchCorrection, s.sampleLink,
+            s.sampleType or SAMPLE_TYPE_VORBIS,
+        )
+    } + src.shdr.last()
+
+    val ifil = LeOut().apply { u16(3); u16(1) }.out.toByteArray()
+    val info = src.info.map { (id, data) -> if (id == "ifil") id to ifil else id to data }
+    return Sf2(info, smpl.toByteArray(), false, src.phdr, src.pbag, src.pmod, src.pgen, src.inst, src.ibag, src.imod, src.igen, shdr)
 }
 
 /** INFO 문자열: 0 으로 끝나고 길이는 짝수 */

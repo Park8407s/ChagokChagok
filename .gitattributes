@@ -8,3 +8,4 @@ gradlew text eol=lf
 *.jar binary
 *.sf2 binary
 *.so binary
+*.sf3 binary
