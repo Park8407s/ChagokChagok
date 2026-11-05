@@ -3,7 +3,7 @@
 /local.properties
 /.idea
 .DS_Store
-/build
+build/
 /captures
 .externalNativeBuild
 .cxx
@@ -13,3 +13,6 @@ local.properties
 # 작업용 (저장소에 올리지 않음)
 /HANDOFF*.md
 /reference/
+
+# 사운드폰트 (용량이 커서 저장소에 올리지 않음, README 참고)
+/app/src/main/assets/soundfonts/*.sf2

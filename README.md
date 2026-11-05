@@ -74,16 +74,38 @@ app/src/main/java/com/kumhoht/todaysost/
   data/              Room, 파일 저장소, 하루/월간 앨범 집계
   ui/                홈, 도착, 앨범('차곡차곡'), 데모, 설정
 app/src/main/assets/
-  soundfonts/        GeneralUser GS, FluidR3_GM
+  soundfonts/        GeneralUser GS, FluidR3_GM (저장소 제외, 아래 '사운드폰트' 참고)
   demo_tracks/       출품용 샘플 10트랙
+```
+
+## 사운드폰트
+
+> **용량이 커서 저장소에는 올리지 않습니다.** 빌드 전에 아래 두 파일을 `app/src/main/assets/soundfonts/`에 직접 넣어 주세요.
+> (파일이 없어도 빌드는 되지만 곡이 렌더링되지 않습니다.)
+
+| 파일 | 악기 | 크기 | 받는 법 |
+|---|---|---|---|
+| `GeneralUser-GS.sf2` | 피아노·기타·베이스·드럼·신스·오르간·색소폰·리코더·오르골 | 31MB | [GeneralUser GS v2.0.3](https://github.com/mrbumpy409/GeneralUser-GS) 저장소의 `GeneralUser-GS.sf2` 그대로 |
+| `FluidR3_GM_ensemble.sf2` | 스트링·코러스·브라스 (GM 40~45, 48~54, 56~63) | 35MB | FluidR3_GM 원본(141MB)에서 아래 도구로 프리셋만 추출 |
+
+추출본은 샘플과 파라미터를 바꾸지 않으며, 도구가 모든 샘플이 원본과 바이트 단위로 같은지 검사합니다.
+
+**FluidR3_GM 추출본 만들기**
+
+1. 원본 받기: Debian 패키지 [`fluid-soundfont-gm_3.1-6_all.deb`](https://deb.debian.org/debian/pool/main/f/fluid-soundfont/)를 풀면 `usr/share/sounds/sf2/FluidR3_GM.sf2`
+2. 실행:
+
+```bash
+./gradlew :tools:sf2subset:run --args="list <FluidR3_GM.sf2 경로>"
+./gradlew :tools:sf2subset:run --args="extract <FluidR3_GM.sf2 경로> app/src/main/assets/soundfonts/FluidR3_GM_ensemble.sf2 0:40-45,0:48-54,0:56-63"
 ```
 
 ## 오픈소스 라이선스
 
-설정 > 오픈소스 라이선스 (주차 중에만 표시)
+설정 > 오픈소스 라이선스 (주차 중에만 표시). 전문은 `app/src/main/assets/licenses/`.
 
 | 구성 요소 | 라이선스 |
 |---|---|
 | FluidSynth | LGPL-2.1 (동적 링크 .so) |
 | GeneralUser GS | GeneralUser GS License v2.0 |
-| FluidR3_GM | MIT |
+| FluidR3_GM | MIT (Copyright 2000-2002, 2008 Frank Wen, 2008 Toby Smithe) |
