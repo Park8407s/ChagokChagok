@@ -35,6 +35,7 @@ object AlbumMapper {
                 trackTitles = ordered.map(::shortTitle),
                 coverSeed = ordered.first().id * 7919,
                 roughEvents = ordered.sumOf(::rough),
+                trackIds = ordered.map { it.id },
             )
         }
 

@@ -56,7 +56,7 @@ fun DemoScreen(
     onSample: (Genre, Drive) -> Unit,
     onMakeNow: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 20.dp)) {
+    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("가상 주행 샘플 들어보기", style = OstType.Display)
             Spacer(Modifier.size(27.dp))

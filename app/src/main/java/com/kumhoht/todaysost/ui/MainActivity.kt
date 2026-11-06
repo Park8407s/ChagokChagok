@@ -81,6 +81,22 @@ class MainActivity : ComponentActivity() {
     private var synthRunning by mutableStateOf(false)
     private var making: Job? = null
 
+    /** 지나온 화면 (‹ 이전·뒤로 가기용). 홈으로 가면 비운다 */
+    private val backStack = androidx.compose.runtime.mutableStateListOf<Screen>()
+    /** 도착 화면에 보여 줄 곡이 있는지 ('방금 곡' 버튼) */
+    private var hasArrival by mutableStateOf(false)
+
+    private fun go(to: Screen) {
+        if (to == screen) return
+        if (to == Screen.ARRIVAL) hasArrival = true
+        if (to == Screen.HOME) backStack.clear() else backStack.add(screen)
+        screen = to
+    }
+
+    private fun back() {
+        screen = backStack.removeLastOrNull() ?: Screen.HOME
+    }
+
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         if (result.values.any { it }) app.telemetry.onPermissionsGranted()
     }
@@ -101,10 +117,17 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch { app.db.tracks().all().collect { tracks = it } }
         handleIntent(intent)
+        // 시스템 뒤로 가기(제스처·키)도 이전 화면으로. 더 갈 곳이 없으면 기본 동작(앱 나가기)
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (backStack.isNotEmpty() || screen != Screen.HOME) back()
+                else { isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true }
+            }
+        })
         setContent {
             OstTheme {
                 Column(Modifier.fillMaxSize().background(Ost.Bg)) {
-                    OstStatusBar(screen) { screen = it }
+                    OstStatusBar(screen, canGoBack = backStack.isNotEmpty(), showArrival = hasArrival, onBack = ::back) { go(it) }
                     Box(Modifier.fillMaxWidth().weight(1f)) { Content() }
                 }
             }
@@ -127,7 +150,7 @@ class MainActivity : ComponentActivity() {
                     yesterday = yesterday?.let(AlbumMapper::trackUi) ?: SampleData.yesterday,
                     yesterdayTrackCount = yesterday?.let { y -> saved.count { it.dayKey == y.dayKey } } ?: SampleData.yesterdayTrackCount,
                     onReplay = { if (yesterday != null) toggle(File(yesterday.filePath)) else makeAndPlay(Genre.POP_BALLAD, Drive.SMOOTH) },
-                    onOpenAlbum = { screen = Screen.ALBUM },
+                    onOpenAlbum = { go(Screen.ALBUM) },
                 )
             }
             Screen.ARRIVAL -> ArrivalScreen(
@@ -135,12 +158,12 @@ class MainActivity : ComponentActivity() {
                 progress = if (playingFile != null && playingFile == arrivalFile) progress else 0f,
                 showDemoEntry = true,
                 playing = playingFile != null && playingFile == arrivalFile,
-                onPlay = ::toggleArrival, onShare = ::notReady, onOpenDemo = { screen = Screen.DEMO },
+                onPlay = ::toggleArrival, onShare = ::notReady, onOpenDemo = { go(Screen.DEMO) },
             )
             Screen.ALBUM -> {
                 val month = Calendar.getInstance().get(Calendar.MONTH) + 1
                 if (saved.isEmpty()) AlbumScreen(SampleData.days, SampleData.month, onPlayMonth = ::notReady)
-                else AlbumScreen(AlbumMapper.days(saved), AlbumMapper.month(saved, month), onPlayMonth = ::notReady)
+                else AlbumScreen(AlbumMapper.days(saved), AlbumMapper.month(saved, month), onPlayMonth = ::notReady, onOpenTrack = { id -> lifecycleScope.launch { showSaved(id) } })
             }
             Screen.DEMO -> DemoScreen(
                 smooth = demoUi(genre, Drive.SMOOTH), rough = demoUi(genre, Drive.ROUGH),
@@ -175,7 +198,7 @@ class MainActivity : ComponentActivity() {
         val t = app.db.tracks().get(id) ?: return
         arrival = AlbumMapper.trackUi(t)
         arrivalFile = File(t.filePath)
-        screen = Screen.ARRIVAL
+        go(Screen.ARRIVAL)
         app.db.tracks().markSeen(id)
     }
 
@@ -198,7 +221,7 @@ class MainActivity : ComponentActivity() {
     private fun makeArrival(g: Genre, d: Drive) = make(g, d) { file ->
         arrival = demoUi(g, d)
         arrivalFile = file
-        screen = Screen.ARRIVAL
+        go(Screen.ARRIVAL)
         player.play(file)
     }
 
@@ -228,13 +251,13 @@ class MainActivity : ComponentActivity() {
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
     private fun handleDebugIntent(intent: Intent) {
-        intent.getStringExtra("screen")?.let { name -> Screen.entries.firstOrNull { it.name == name }?.let { screen = it } }
+        intent.getStringExtra("screen")?.let { name -> Screen.entries.firstOrNull { it.name == name }?.let { go(it) } }
         val d = intent.getStringExtra("drive")?.let { name -> Drive.entries.firstOrNull { it.name == name } }
-        if (d != null) { demoDrive = d; arrival = demoUi(genre, d); screen = Screen.ARRIVAL }
+        if (d != null) { demoDrive = d; arrival = demoUi(genre, d); go(Screen.ARRIVAL) }
         intent.getStringExtra("make")?.let { name ->
             Genre.entries.firstOrNull { it.name == name }?.let { g -> genre = g; makeArrival(g, d ?: Drive.SMOOTH) }
         }
-        if (intent.getBooleanExtra("synthTest", false)) { screen = Screen.SETTINGS; runSynthTest() }
+        if (intent.getBooleanExtra("synthTest", false)) { go(Screen.SETTINGS); runSynthTest() }
     }
 
     private fun runSynthTest() {

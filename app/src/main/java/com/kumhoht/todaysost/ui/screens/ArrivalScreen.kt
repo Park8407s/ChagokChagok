@@ -53,7 +53,7 @@ fun ArrivalScreen(
     onOpenDemo: () -> Unit,
 ) {
     val accent = track.genre.color
-    Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 49.dp, top = 20.dp)) {
+    Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 49.dp, top = 6.dp)) {
         // 왼쪽: 커버와 버튼
         Column(Modifier.width(483.dp)) {
             AlbumCover(track.id, accent, track.roughEvents, Modifier.size(483.dp))

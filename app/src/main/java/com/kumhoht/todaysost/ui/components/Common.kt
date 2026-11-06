@@ -137,24 +137,50 @@ fun OutlineButton(
 enum class Screen(val label: String) { HOME("홈"), ARRIVAL("도착"), ALBUM("앨범"), DEMO("데모"), SETTINGS("설정") }
 
 /**
- * 맨 위 줄: 시각 · 앱 이름 · 화면 이동.
- * 시안의 오른쪽 기온(14°C) 자리에 화면 이동 버튼을 넣었다 (시안에 화면 이동 방법이 없어서 추가).
+ * 맨 위 줄: [‹ 이전] 시각 · 앱 이름 · 화면 이동 버튼.
+ * 시안에는 화면 이동 방법이 없고 Pleos 에는 뒤로 가기 버튼이 없어서 추가했다.
+ * 차 안에서 누르기 쉽게 버튼 높이 52dp, 글자 22sp.
+ *
+ * @param showArrival 방금 만든 곡(도착 화면)이 있으면 '방금 곡' 버튼을 보여 준다
  */
 @Composable
-fun OstStatusBar(current: Screen, onNavigate: (Screen) -> Unit) {
+fun OstStatusBar(
+    current: Screen,
+    canGoBack: Boolean,
+    showArrival: Boolean,
+    onBack: () -> Unit,
+    onNavigate: (Screen) -> Unit,
+) {
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) { while (true) { now = Date(); delay(10_000) } }
-    Box(Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 46.dp)) {
-        Text(SimpleDateFormat("HH:mm", Locale.KOREA).format(now), style = OstType.Status, modifier = Modifier.align(Alignment.CenterStart))
+    val navStyle = OstType.BodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+    Box(Modifier.fillMaxWidth().height(72.dp).padding(horizontal = 40.dp)) {
+        Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            if (canGoBack) {
+                Text(
+                    "‹ 이전", style = navStyle,
+                    modifier = Modifier.height(52.dp).clip(Pill).border(BorderStroke(2.dp, Ost.Line), Pill)
+                        .clickable(onClick = onBack).padding(horizontal = 24.dp, vertical = 11.dp),
+                )
+            }
+            Text(SimpleDateFormat("HH:mm", Locale.KOREA).format(now), style = OstType.Status)
+        }
         Text("오늘의 OST", style = OstType.Status, modifier = Modifier.align(Alignment.Center))
-        Row(Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(Screen.HOME, Screen.ALBUM, Screen.DEMO, Screen.SETTINGS).forEach { s ->
+        Row(Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            val items = buildList {
+                add(Screen.HOME)
+                if (showArrival) add(Screen.ARRIVAL)
+                add(Screen.ALBUM); add(Screen.DEMO); add(Screen.SETTINGS)
+            }
+            items.forEach { s ->
                 val on = s == current
                 Text(
-                    s.label,
-                    style = OstType.Status.copy(color = if (on) Ost.Text else Ost.TextSub),
-                    modifier = Modifier.clip(Pill).background(if (on) Ost.CardHigh else Color.Transparent)
-                        .clickable { onNavigate(s) }.padding(horizontal = 14.dp, vertical = 4.dp),
+                    if (s == Screen.ARRIVAL) "방금 곡" else s.label,
+                    style = navStyle.copy(color = if (on) Ost.Bg else Ost.Text),
+                    modifier = Modifier.height(52.dp).clip(Pill)
+                        .background(if (on) Ost.Yellow else Color.Transparent)
+                        .border(BorderStroke(2.dp, if (on) Ost.Yellow else Ost.Line), Pill)
+                        .clickable { onNavigate(s) }.padding(horizontal = 24.dp, vertical = 11.dp),
                 )
             }
         }

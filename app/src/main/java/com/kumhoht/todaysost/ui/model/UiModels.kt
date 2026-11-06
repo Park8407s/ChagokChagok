@@ -65,6 +65,8 @@ data class DayAlbumUi(
     val trackTitles: List<String>,
     val coverSeed: Long,
     val roughEvents: Int,
+    /** 저장된 트랙 id (trackTitles 와 같은 순서). 시안 예시 데이터는 비어 있다 */
+    val trackIds: List<Long> = emptyList(),
 )
 
 data class MonthSummaryUi(

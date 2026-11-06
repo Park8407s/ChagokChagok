@@ -45,7 +45,7 @@ fun HomeScreen(
     onReplay: () -> Unit,
     onOpenAlbum: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 20.dp)) {
+    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Text("오늘은 어떤 곡으로 달릴까요?", style = OstType.Display)
         Spacer(Modifier.height(22.dp))
         Text("고른 장르로 이번 운전이 오늘의 OST 한 트랙이 됩니다. 도착하면 들려드릴게요.", style = OstType.Lead)

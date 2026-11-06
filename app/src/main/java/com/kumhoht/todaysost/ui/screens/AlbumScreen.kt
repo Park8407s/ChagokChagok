@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -42,9 +43,9 @@ import com.kumhoht.todaysost.ui.theme.shortName
 
 /** 그림 5. 내 OST 앨범 화면 ('차곡차곡') */
 @Composable
-fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -> Unit) {
+fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -> Unit, onOpenTrack: (Long) -> Unit = {}) {
     var byTrack by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 20.dp)) {
+    Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.weight(1f)) {
                 Text("내 OST 앨범", style = OstType.Display)
@@ -63,7 +64,12 @@ fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -
             if (byTrack) {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(days.flatMap { d -> d.trackTitles.mapIndexed { i, t -> Triple(d, i + 1, t) } }) { (d, n, t) ->
-                        Row(Modifier.fillMaxWidth().card().padding(horizontal = 30.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                        val id = d.trackIds.getOrNull(n - 1)
+                        Row(
+                            Modifier.fillMaxWidth().card().clickable(enabled = id != null) { id?.let(onOpenTrack) }
+                                .padding(horizontal = 30.dp, vertical = 18.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text("%02d".format(n), style = OstType.BodySmall.copy(color = Ost.Yellow))
                             Spacer(Modifier.size(16.dp))
                             Text(t, style = OstType.BodySmall, modifier = Modifier.weight(1f))
@@ -75,7 +81,7 @@ fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -
                 Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     days.chunked(4).forEach { row ->
                         Row(Modifier.fillMaxWidth().height(403.dp)) {
-                            row.forEach { DayItem(it, Modifier.width(391.dp)) }
+                            row.forEach { DayItem(it, Modifier.width(391.dp), onOpenTrack) }
                         }
                     }
                 }
@@ -105,9 +111,11 @@ private fun Tab(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun DayItem(day: DayAlbumUi, modifier: Modifier) {
+private fun DayItem(day: DayAlbumUi, modifier: Modifier, onOpenTrack: (Long) -> Unit) {
     Column(modifier) {
-        Box(Modifier.size(230.dp)) {
+        // 커버를 누르면 그날 첫 트랙, 트랙 이름을 누르면 그 트랙의 도착(곡 해설) 화면
+        Box(Modifier.size(230.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .clickable(enabled = day.trackIds.isNotEmpty()) { day.trackIds.firstOrNull()?.let(onOpenTrack) }) {
             AlbumCover(day.coverSeed, day.genre.color, day.roughEvents, Modifier.size(230.dp), corner = 12.dp)
             Box(
                 Modifier.offset(x = 132.dp, y = 16.dp).height(39.dp).width(82.dp).clip(Pill).background(Ost.CoverBg),
@@ -118,7 +126,11 @@ private fun DayItem(day: DayAlbumUi, modifier: Modifier) {
         Text("${day.dateTitle}의 OST", style = OstType.Section.copy(fontSize = OstType.Body.fontSize))
         Spacer(Modifier.height(8.dp))
         day.trackTitles.forEachIndexed { i, t ->
-            Row(Modifier.height(33.dp), verticalAlignment = Alignment.CenterVertically) {
+            val id = day.trackIds.getOrNull(i)
+            Row(
+                Modifier.height(33.dp).clickable(enabled = id != null) { id?.let(onOpenTrack) },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text("%02d".format(i + 1), style = OstType.Label.copy(color = Ost.Yellow))
                 Spacer(Modifier.size(6.dp))
                 Text(t, style = OstType.Label)

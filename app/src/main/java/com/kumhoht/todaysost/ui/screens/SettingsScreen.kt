@@ -79,7 +79,7 @@ fun SettingsScreen(
     synthStatus: String?,
 ) {
     var menu by remember { mutableStateOf(SettingsMenu.LICENSES) }
-    Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 65.dp, top = 20.dp)) {
+    Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 65.dp, top = 6.dp)) {
         Column(Modifier.width(380.dp)) {
             Row(Modifier.height(61.dp), verticalAlignment = Alignment.CenterVertically) {
                 OstIcon(R.drawable.ic_settings, Ost.Text, 46.dp)
