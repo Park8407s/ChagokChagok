@@ -12,7 +12,8 @@
 | 단계 | 내용 | 상태 |
 |---|---|---|
 | M0 | 프로젝트 생성, 빈 화면 | ✅ |
-| M1 | 기술 리스크 검증 (FluidSynth NDK, 주행 규제, 오디오 포커스, 차량 데이터) | 예정 |
+| M1-1 | FluidSynth 연결, SF3 사운드폰트로 오프라인 렌더 | ✅ (에뮬레이터 확인) |
+| M1-2~4 | 주행 규제 중 동작, 오디오 포커스, 차량 데이터 수신 | 예정 |
 | M2 | 엔진 포팅 (`drive_session.py`, 작곡 엔진 v3 → Kotlin) | 예정 |
 | M3~ | 도착 화면, 하루 앨범, 월간 OST, 가상 주행 샘플, 설정·라이선스 | 예정 |
 
@@ -56,11 +57,24 @@
 - compileSdk·targetSdk 37, minSdk 28
 - Pleos SDK: `ai.pleos.playground:Vehicle:2.3.2`, `ai.pleos.playground:NaviHelper:3.0.5`
 
+- NDK 28.2, CMake 3.22.1: SDK 라이선스에 동의돼 있으면 첫 빌드 때 Gradle이 자동으로 설치합니다.
+- FluidSynth 2.6.2: 첫 빌드 때 `fetchFluidSynth` 작업이 [공식 안드로이드 빌드](https://github.com/FluidSynth/fluidsynth/releases/tag/v2.6.2)(19MB)를 받아 SHA-256을 확인하고, 필요한 `.so`와 헤더만 `app/build/fluidsynth/`에 풉니다. 저장소에는 넣지 않습니다.
+- ABI: `arm64-v8a`(실차), `x86_64`(Pleos Connect 에뮬레이터)
+
 ```bash
 ./gradlew :app:assembleDebug        # 개발용
 ./gradlew :app:assembleRelease      # 제출용 (디버그 키 서명)
 ./gradlew :app:testDebugUnitTest    # 단위 테스트
 ```
+
+**소리 엔진 확인 (디버그 빌드)**: 홈 화면의 '소리 엔진 테스트' 버튼, 또는
+
+```bash
+adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --ez synthTest true
+adb logcat -s SynthSmoke OstSynth FluidSynth
+```
+
+피아노·베이스·드럼(GeneralUser GS)과 스트링·브라스·코러스(FluidR3)를 렌더해 구간별·악기별 음량을 보여 주고 재생합니다.
 
 ## 코드 구조 (계획)
 
@@ -112,5 +126,8 @@ SF3 형식(샘플을 Ogg Vorbis로 압축한 사운드폰트)을 씁니다. Flui
 | 구성 요소 | 라이선스 |
 |---|---|
 | FluidSynth | LGPL-2.1 (동적 링크 .so) |
+| libsndfile (FluidSynth 의존성, SF3 읽기) | LGPL-2.1 (동적 링크 .so) |
+| Oboe (FluidSynth 의존성) | Apache-2.0 |
+| libogg, libvorbis, FLAC, Opus (libsndfile 의존성) | BSD-3-Clause |
 | GeneralUser GS | GeneralUser GS License v2.0 |
 | FluidR3_GM | MIT (Copyright 2000-2002, 2008 Frank Wen, 2008 Toby Smithe) |
