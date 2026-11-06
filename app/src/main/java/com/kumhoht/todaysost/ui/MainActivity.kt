@@ -197,7 +197,34 @@ class MainActivity : ComponentActivity() {
                 barMode = barMode, onBarMode = { barMode = it; app.barMode = it },
                 onSynthTest = if (BuildConfig.DEBUG && !synthRunning) ::runSynthTest else null,
                 synthStatus = synthStatus,
+                trackCount = tracks.size,
+                onReset = ::resetData,
+                onShutdown = { DriveService.shutdown(this) },
             )
+        }
+    }
+
+    /** 데이터 초기화: 트랙(Room)·곡 파일·설정을 지운다. 사운드폰트 사본은 남긴다. 주차 중에만 */
+    private fun resetData() {
+        if (app.recording.value.recording) { toast("주차 중에만 초기화할 수 있어요"); return }
+        player.stop()
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                app.db.tracks().deleteAll()
+                File(filesDir, "tracks").deleteRecursively()
+                File(filesDir, "smoke").deleteRecursively()
+                app.prefs.edit().clear().commit()
+            }
+            genre = app.genre
+            barMode = app.barMode
+            arrival = demoUi(genre, Drive.SMOOTH)
+            arrivalFile = null
+            hasArrival = false
+            demoSample = null
+            dismissShortDrive()
+            backStack.clear()
+            screen = Screen.HOME
+            toast("데이터를 모두 지웠어요. 처음부터 시작해요.")
         }
     }
 

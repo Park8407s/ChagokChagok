@@ -44,6 +44,7 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE id = :id") suspend fun get(id: Long): TrackEntity?
     @Query("SELECT * FROM tracks WHERE seen = 0 ORDER BY createdAt DESC LIMIT 1") fun latestUnseen(): Flow<TrackEntity?>
     @Query("UPDATE tracks SET seen = 1 WHERE id = :id") suspend fun markSeen(id: Long)
+    @Query("DELETE FROM tracks") suspend fun deleteAll()
 }
 
 @Database(entities = [TrackEntity::class], version = 1, exportSchema = false)

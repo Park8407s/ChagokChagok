@@ -37,6 +37,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.kumhoht.todaysost.BuildConfig
 import com.kumhoht.todaysost.R
 import com.kumhoht.todaysost.core.model.BarMode
+import com.kumhoht.todaysost.ui.components.ConfirmDialog
 import com.kumhoht.todaysost.ui.components.OstIcon
 import com.kumhoht.todaysost.ui.components.OutlineButton
 import com.kumhoht.todaysost.ui.components.Pill
@@ -77,6 +78,9 @@ fun SettingsScreen(
     onBarMode: (BarMode) -> Unit,
     onSynthTest: (() -> Unit)?,
     synthStatus: String?,
+    trackCount: Int = 0,
+    onReset: () -> Unit = {},
+    onShutdown: () -> Unit = {},
 ) {
     var menu by remember { mutableStateOf(SettingsMenu.LICENSES) }
     Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 65.dp, top = 6.dp)) {
@@ -103,7 +107,8 @@ fun SettingsScreen(
             when (menu) {
                 SettingsMenu.LICENSES -> Licenses()
                 SettingsMenu.COMPOSE -> ComposeSettings(barMode, onBarMode)
-                SettingsMenu.ABOUT -> About(onSynthTest, synthStatus)
+                SettingsMenu.ABOUT -> About(onSynthTest, synthStatus, onShutdown)
+                SettingsMenu.PRIVACY -> Privacy(trackCount, onReset)
                 else -> Placeholder(menu.label)
             }
         }
@@ -195,10 +200,25 @@ private fun ComposeSettings(barMode: BarMode, onBarMode: (BarMode) -> Unit) {
 }
 
 @Composable
-private fun About(onSynthTest: (() -> Unit)?, synthStatus: String?) {
+private fun About(onSynthTest: (() -> Unit)?, synthStatus: String?, onShutdown: () -> Unit) {
+    var ask by remember { mutableStateOf(false) }
     Text("앱 정보", style = OstType.Display)
     Spacer(Modifier.height(25.dp))
     Text("오늘의 OST ${BuildConfig.VERSION_NAME}", style = OstType.Lead)
+    Spacer(Modifier.height(40.dp))
+    ActionCard(
+        title = "오늘의 OST 끄기",
+        body = "운전 기록을 멈추고 앱을 닫아요. 꺼져 있는 동안 운전한 기록은 곡이 되지 않아요.\n앱을 다시 열거나 다음에 시동을 켜면 다시 켜져요.",
+        button = "끄기",
+        onClick = { ask = true },
+    )
+    if (ask) ConfirmDialog(
+        title = "오늘의 OST를 끌까요?",
+        body = "꺼져 있는 동안은 운전해도 곡이 만들어지지 않아요.\n앱을 다시 열면 다시 켜져요.",
+        confirmText = "끄기",
+        onConfirm = { ask = false; onShutdown() },
+        onCancel = { ask = false },
+    )
     if (BuildConfig.DEBUG) {
         Spacer(Modifier.height(40.dp))
         Column(Modifier.fillMaxWidth().card().padding(34.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -206,6 +226,46 @@ private fun About(onSynthTest: (() -> Unit)?, synthStatus: String?) {
             Text("두 사운드폰트로 피아노·베이스·드럼·스트링·브라스·코러스를 렌더해 재생합니다.", style = OstType.Label)
             PrimaryButton(if (onSynthTest == null) "렌더링 중..." else "소리 엔진 테스트", { onSynthTest?.invoke() }, height = 66.dp)
             synthStatus?.let { Text(it, style = OstType.Label.copy(lineHeight = 28.sp)) }
+        }
+    }
+}
+
+@Composable
+private fun Privacy(trackCount: Int, onReset: () -> Unit) {
+    var ask by remember { mutableStateOf(false) }
+    Text("개인정보", style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text(
+        "운전 기록(속도·기어·깜빡이)과 만든 곡은 이 차 안에만 저장되고, 인터넷으로 보내지 않아요.",
+        style = OstType.Lead.copy(lineHeight = 30.sp),
+    )
+    Spacer(Modifier.height(40.dp))
+    ActionCard(
+        title = "내 데이터 모두 지우기",
+        body = "저장된 트랙 ${trackCount}개와 곡 파일, 고른 장르·마디 모드 설정을 지우고 처음 상태로 돌아가요.\n주차 중에만 지울 수 있어요.",
+        button = "초기화",
+        onClick = { ask = true },
+    )
+    if (ask) ConfirmDialog(
+        title = "데이터를 모두 지울까요?",
+        body = "내 OST 앨범의 트랙 ${trackCount}개와 곡 파일, 설정이 모두 지워져요.\n지운 데이터는 되돌릴 수 없어요.",
+        confirmText = "초기화",
+        onConfirm = { ask = false; onReset() },
+        onCancel = { ask = false },
+    )
+}
+
+/** 설명 + 오른쪽 버튼 하나 카드 (끄기·초기화) */
+@Composable
+private fun ActionCard(title: String, body: String, button: String, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().card().padding(horizontal = 34.dp, vertical = 30.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(title, style = OstType.Title)
+            Text(body, style = OstType.Label.copy(lineHeight = 30.sp))
+        }
+        Spacer(Modifier.width(30.dp))
+        OutlineButton(onClick, Modifier.width(180.dp), height = 72.dp, border = Ost.Yellow, contentPadding = PaddingValues(0.dp)) {
+            Text(button, style = OstType.Button.copy(color = Ost.Yellow))
         }
     }
 }

@@ -128,6 +128,20 @@ class DriveService : Service() {
         fun start(c: Context) = runCatching { c.startForegroundService(Intent(c, DriveService::class.java)) }
             .onFailure { Log.w(TAG, "서비스 시작 실패: ${it.message}") }
 
+        /**
+         * 앱 끄기: 기록 서비스를 멈추고 차량 신호 수신·재생을 끊은 뒤 앱을 완전히 닫는다.
+         * 앱을 다시 열거나 다음 시동(부팅) 때 다시 켜진다. (붕붕멍과 같은 방식)
+         */
+        fun shutdown(activity: android.app.Activity) {
+            Log.i(TAG, "앱 끄기")
+            val app = OstApp.of(activity)
+            app.player.stop()
+            activity.stopService(Intent(activity, DriveService::class.java))
+            app.telemetry.stop()
+            activity.finishAndRemoveTask()
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ android.os.Process.killProcess(android.os.Process.myPid()) }, 400)
+        }
+
         fun dayKey(ms: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA).format(ms)
 
         /** "11월 6일 아침 드라이브" (경로 이름을 알 수 없어 시간대로 짓는다) */
