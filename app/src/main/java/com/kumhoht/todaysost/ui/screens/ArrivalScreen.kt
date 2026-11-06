@@ -47,6 +47,7 @@ fun ArrivalScreen(
     track: TrackUi,
     progress: Float,
     showDemoEntry: Boolean,
+    playing: Boolean,
     onPlay: () -> Unit,
     onShare: () -> Unit,
     onOpenDemo: () -> Unit,
@@ -58,7 +59,7 @@ fun ArrivalScreen(
             AlbumCover(track.id, accent, track.roughEvents, Modifier.size(483.dp))
             Spacer(Modifier.height(32.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(17.dp)) {
-                PrimaryButton("이 트랙 듣기", onPlay, Modifier.width(264.dp))
+                PrimaryButton(if (playing) "멈추기" else "이 트랙 듣기", onPlay, Modifier.width(264.dp), icon = if (playing) R.drawable.ic_stop else R.drawable.ic_play)
                 OutlineButton(onShare, Modifier.width(98.dp), contentPadding = PaddingValues(0.dp)) {
                     OstIcon(R.drawable.ic_share, Ost.Text, 30.dp)
                 }

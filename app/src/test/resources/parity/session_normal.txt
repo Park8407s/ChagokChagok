@@ -1,0 +1,9 @@
+T 178
+S 0 0 intro None 0
+S 1 0 intro None 0
+S 2 26 None None 0
+S 3 25 None None 0
+S 4 85 hard_brake None 0
+S 5 66 None None 0
+S 6 0 outro None 0
+S 7 0 outro None 0

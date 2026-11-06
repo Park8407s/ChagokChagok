@@ -22,6 +22,8 @@ sealed class SynthEvent(val frame: Int) {
     /** 채널의 악기를 고른다. 드럼은 bank 128. */
     class Program(frame: Int, val channel: Int, val font: SoundFont, val bank: Int, val program: Int) : SynthEvent(frame)
     class Control(frame: Int, val channel: Int, val controller: Int, val value: Int) : SynthEvent(frame)
+    /** 피치 벤드 0..16383 (8192 = 가운데) */
+    class PitchBend(frame: Int, val channel: Int, val value: Int) : SynthEvent(frame)
 }
 
 /**
@@ -63,6 +65,7 @@ class OfflineRenderer(context: Context, val sampleRate: Int = 44_100) : Closeabl
                     packed[o + 3] = fontIds.getValue(e.font); packed[o + 4] = e.bank; packed[o + 5] = e.program
                 }
                 is SynthEvent.Control -> { packed[o + 1] = 3; packed[o + 2] = e.channel; packed[o + 3] = e.controller; packed[o + 4] = e.value }
+                is SynthEvent.PitchBend -> { packed[o + 1] = 4; packed[o + 2] = e.channel; packed[o + 3] = e.value }
             }
         }
         return FluidSynthNative.nativeRender(handle, packed, totalFrames) ?: error("렌더 실패 (메모리 부족)")
