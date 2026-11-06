@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.kumhoht.todaysost.BuildConfig
@@ -83,6 +85,8 @@ class MainActivity : ComponentActivity() {
 
     /** 지나온 화면 (‹ 이전·뒤로 가기용). 홈으로 가면 비운다 */
     private val backStack = androidx.compose.runtime.mutableStateListOf<Screen>()
+    /** 2분 미만 운행 안내 */
+    private var shortDrive by mutableStateOf<com.kumhoht.todaysost.ShortDrive?>(null)
     /** 도착 화면에 보여 줄 곡이 있는지 ('방금 곡' 버튼) */
     private var hasArrival by mutableStateOf(false)
 
@@ -116,6 +120,14 @@ class MainActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch { app.db.tracks().all().collect { tracks = it } }
+        // 2분 미만 운행으로 도착: 홈으로 와서 안내 카드를 띄운다 (30분 지난 안내는 버림)
+        lifecycleScope.launch {
+            app.recording.collect { st ->
+                val sd = st.shortDrive?.takeIf { System.currentTimeMillis() - it.endedAt < 30 * 60_000L }
+                if (sd != null && sd != shortDrive) go(Screen.HOME)
+                shortDrive = sd
+            }
+        }
         handleIntent(intent)
         // 시스템 뒤로 가기(제스처·키)도 이전 화면으로. 더 갈 곳이 없으면 기본 동작(앱 나가기)
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
@@ -128,7 +140,16 @@ class MainActivity : ComponentActivity() {
             OstTheme {
                 Column(Modifier.fillMaxSize().background(Ost.Bg)) {
                     OstStatusBar(screen, canGoBack = backStack.isNotEmpty(), showArrival = hasArrival, onBack = ::back) { go(it) }
-                    Box(Modifier.fillMaxWidth().weight(1f)) { Content() }
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        Content()
+                        shortDrive?.let { sd ->
+                            androidx.compose.runtime.LaunchedEffect(sd) { delay(20_000); dismissShortDrive() } // 20초 뒤 자동으로 닫힘
+                            com.kumhoht.todaysost.ui.components.ShortDriveNotice(
+                                seconds = sd.seconds, onClose = ::dismissShortDrive,
+                                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(bottom = 40.dp),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -245,6 +266,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun toggle(f: File) { if (playingFile == f) player.stop() else player.play(f) }
+
+    private fun dismissShortDrive() {
+        shortDrive = null
+        app.setRecording(app.recording.value.copy(shortDrive = null))
+    }
 
     private fun notReady() = toast("이 기능은 아직 준비 중이에요")
 

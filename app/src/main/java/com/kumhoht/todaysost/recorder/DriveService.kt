@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.kumhoht.todaysost.OstApp
+import com.kumhoht.todaysost.ShortDrive
 import com.kumhoht.todaysost.R
 import com.kumhoht.todaysost.data.BarCodec
 import com.kumhoht.todaysost.data.TrackEntity
@@ -78,7 +79,9 @@ class DriveService : Service() {
     private suspend fun onArrived(trip: DriveRecorder.Trip) {
         if (trip.tooShort) {
             Log.i(TAG, "${trip.seconds}초 운행: 2분 미만이라 트랙을 만들지 않음")
-            app.setRecording(app.recording.value.copy(lastMessage = "2분 미만 운행은 트랙을 만들지 않아요"))
+            // 화면에 "N분 운전했어요. 2분 이상 운전하면…" 안내 (홈이 보이도록 앱을 앞으로)
+            app.setRecording(app.recording.value.copy(shortDrive = ShortDrive(trip.seconds, trip.endedAt)))
+            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             return
         }
         val genre = app.genre

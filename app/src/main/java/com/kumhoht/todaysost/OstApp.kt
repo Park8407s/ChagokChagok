@@ -90,8 +90,11 @@ class OstApp : Application() {
 data class RecorderState(
     val recording: Boolean = false,
     val seconds: Int = 0,
-    /** 마지막 운행 결과 (짧아서 버렸는지 등) */
-    val lastMessage: String? = null,
+    /** 2분 미만이라 트랙을 만들지 않은 마지막 운행 (화면 안내용). 안내를 닫으면 null */
+    val shortDrive: ShortDrive? = null,
     /** 곡을 만드는 중 */
     val composing: Boolean = false,
 )
+
+/** @param seconds 운행 시간, @param endedAt 도착 시각(ms) */
+data class ShortDrive(val seconds: Int, val endedAt: Long)

@@ -90,8 +90,10 @@ fun HomeScreen(
             ) {
                 OstIcon(R.drawable.ic_parking, Ost.Yellow, 64.dp)
                 Spacer(Modifier.size(26.dp))
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("기어를 D로 바꾸면 기록이 시작돼요.", style = OstType.Body)
+                    // 시안에 없던 줄: 2분 미만 운행은 트랙을 만들지 않는다는 규칙 안내
+                    Text("2분 이상 운전하면 곡이 만들어져요.", style = OstType.Body.copy(color = Ost.Yellow))
                     Text("운전 중에는 화면과 소리가 없어요.", style = OstType.Body.copy(color = Ost.TextSub))
                 }
             }
