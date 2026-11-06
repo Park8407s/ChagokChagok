@@ -78,6 +78,9 @@ data class MonthSummaryUi(
     val longestSeconds: Int,
 )
 
+/** 재생 버튼 상태: 멈춤 / 곡 만드는 중 / 재생 중 (소리가 안 들려도 버튼만 보고 알 수 있게) */
+enum class PlayState { IDLE, LOADING, PLAYING }
+
 /** 1분 40초 / 56초 */
 fun formatDuration(seconds: Int): String {
     val m = seconds / 60

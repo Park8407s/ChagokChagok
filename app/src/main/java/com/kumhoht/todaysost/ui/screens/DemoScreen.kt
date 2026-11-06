@@ -34,6 +34,7 @@ import com.kumhoht.todaysost.ui.components.TimelineChart
 import com.kumhoht.todaysost.ui.components.card
 import com.kumhoht.todaysost.ui.components.dashedBorder
 import com.kumhoht.todaysost.ui.components.iconRes
+import com.kumhoht.todaysost.ui.model.PlayState
 import com.kumhoht.todaysost.ui.model.TrackUi
 import com.kumhoht.todaysost.ui.model.formatDuration
 import com.kumhoht.todaysost.ui.theme.Ost
@@ -55,6 +56,7 @@ fun DemoScreen(
     sample: Pair<Genre, Drive>?,
     onSample: (Genre, Drive) -> Unit,
     onMakeNow: () -> Unit,
+    sampleState: (Genre, Drive) -> PlayState = { _, _ -> PlayState.IDLE },
 ) {
     Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -90,9 +92,9 @@ fun DemoScreen(
                     Text("${g.bpm} BPM · ${smooth.bars}마디", style = OstType.Tiny)
                     Spacer(Modifier.height(20.dp))
                     val sec = formatDuration(TrackRules.songSeconds(smooth.bars, g).roundToInt())
-                    SampleButton("A 부드럽게", sec, g.color, sample == (g to Drive.SMOOTH)) { onSample(g, Drive.SMOOTH) }
+                    SampleButton("A 부드럽게", sec, g.color, sample == (g to Drive.SMOOTH), sampleState(g, Drive.SMOOTH)) { onSample(g, Drive.SMOOTH) }
                     Spacer(Modifier.height(16.dp))
-                    SampleButton("B 급하게", sec, g.color, sample == (g to Drive.ROUGH)) { onSample(g, Drive.ROUGH) }
+                    SampleButton("B 급하게", sec, g.color, sample == (g to Drive.ROUGH), sampleState(g, Drive.ROUGH)) { onSample(g, Drive.ROUGH) }
                 }
             }
         }
@@ -130,20 +132,28 @@ private fun DriveCard(drive: Drive, track: TrackUi, events: String, selected: Bo
     }
 }
 
+/**
+ * 샘플 버튼. 재생 중 = 장르 색으로 채움 + 멈춤 아이콘 + '재생 중', 만드는 중 = '만드는 중…',
+ * 멈춘 상태로 마지막에 고른 버튼 = 장르 색 테두리만.
+ */
 @Composable
-private fun SampleButton(label: String, duration: String, accent: Color, selected: Boolean, onClick: () -> Unit) {
+private fun SampleButton(label: String, duration: String, accent: Color, selected: Boolean, state: PlayState, onClick: () -> Unit) {
     val shape = RoundedCornerShape(18.dp)
+    val playing = state == PlayState.PLAYING
     Row(
         Modifier.fillMaxWidth().height(71.dp).clip(shape)
-            .background(if (selected) accent else Color.Transparent)
-            .then(if (selected) Modifier else Modifier.border(2.dp, Ost.Line, shape))
+            .background(if (playing) accent else Color.Transparent)
+            .border(2.dp, if (playing || selected) accent else Ost.Line, shape)
             .clickable(onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val fg = if (selected) Ost.Bg else Ost.Text
-        OstIcon(R.drawable.ic_play, fg, 23.dp)
+        val fg = if (playing) Ost.Bg else Ost.Text
+        OstIcon(if (playing) R.drawable.ic_stop else R.drawable.ic_play, fg, 23.dp)
         Spacer(Modifier.size(11.dp))
         Text(label, style = OstType.Label.copy(color = fg, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-        Text(duration, style = OstType.Tiny.copy(color = if (selected) Ost.Bg else Ost.TextSub))
+        Text(
+            when (state) { PlayState.PLAYING -> "재생 중"; PlayState.LOADING -> "만드는 중…"; else -> duration },
+            style = OstType.Tiny.copy(color = if (playing) Ost.Bg else Ost.TextSub, fontWeight = if (playing) FontWeight.Bold else FontWeight.Normal),
+        )
     }
 }

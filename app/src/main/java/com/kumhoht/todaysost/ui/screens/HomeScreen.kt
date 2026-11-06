@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,6 +29,7 @@ import com.kumhoht.todaysost.ui.components.OstIcon
 import com.kumhoht.todaysost.ui.components.OutlineButton
 import com.kumhoht.todaysost.ui.components.card
 import com.kumhoht.todaysost.ui.components.iconRes
+import com.kumhoht.todaysost.ui.model.PlayState
 import com.kumhoht.todaysost.ui.model.TrackUi
 import com.kumhoht.todaysost.ui.model.formatDuration
 import com.kumhoht.todaysost.ui.theme.Ost
@@ -44,6 +47,7 @@ fun HomeScreen(
     yesterdayTrackCount: Int,
     onReplay: () -> Unit,
     onOpenAlbum: () -> Unit,
+    replayState: PlayState = PlayState.IDLE,
 ) {
     Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Text("오늘은 어떤 곡으로 달릴까요?", style = OstType.Display)
@@ -76,9 +80,22 @@ fun HomeScreen(
                         )
                         Text("${yesterday.genre.shortName} · ${formatDuration(yesterday.seconds)}", style = OstType.Label)
                     }
-                    OutlineButton(onReplay, Modifier.padding(end = 0.dp), height = 77.dp) {
-                        OstIcon(R.drawable.ic_play, Ost.Text, 28.dp)
-                        Text("다시 듣기", style = OstType.Body)
+                    // 재생 중이면 노란 '멈추기', 곡을 만드는 중이면 '준비 중…' (소리가 없어도 상태가 보이게)
+                    val playing = replayState == PlayState.PLAYING
+                    val fg = if (playing) Ost.Bg else Ost.Text
+                    OutlineButton(
+                        onReplay, Modifier.width(220.dp), height = 77.dp,
+                        fill = if (playing) Ost.Yellow else androidx.compose.ui.graphics.Color.Transparent,
+                        border = if (playing) Ost.Yellow else Ost.Line,
+                        contentPadding = PaddingValues(0.dp),
+                    ) {
+                        when (replayState) {
+                            PlayState.LOADING -> Text("준비 중…", style = OstType.Body.copy(color = Ost.TextSub))
+                            else -> {
+                                OstIcon(if (playing) R.drawable.ic_stop else R.drawable.ic_play, fg, 28.dp)
+                                Text(if (playing) "멈추기" else "다시 듣기", style = OstType.Body.copy(color = fg))
+                            }
+                        }
                     }
                 } else {
                     Text("아직 만든 트랙이 없어요. 첫 운전을 시작해 보세요.", style = OstType.Body.copy(color = Ost.TextSub))

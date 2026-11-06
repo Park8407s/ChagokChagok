@@ -35,6 +35,7 @@ import com.kumhoht.todaysost.recorder.DriveService
 import com.kumhoht.todaysost.ui.components.OstStatusBar
 import com.kumhoht.todaysost.ui.components.Screen
 import com.kumhoht.todaysost.ui.model.AlbumMapper
+import com.kumhoht.todaysost.ui.model.PlayState
 import com.kumhoht.todaysost.ui.model.SampleData
 import com.kumhoht.todaysost.ui.model.TrackUi
 import com.kumhoht.todaysost.ui.model.TrackUiFactory
@@ -82,6 +83,8 @@ class MainActivity : ComponentActivity() {
     private var synthStatus by mutableStateOf<String?>(null)
     private var synthRunning by mutableStateOf(false)
     private var making: Job? = null
+    /** 지금 만들고 있는 데모 곡 (버튼에 '만드는 중…' 표시) */
+    private var makingKey by mutableStateOf<String?>(null)
 
     /** 지나온 화면 (‹ 이전·뒤로 가기용). 홈으로 가면 비운다 */
     private val backStack = androidx.compose.runtime.mutableStateListOf<Screen>()
@@ -172,6 +175,8 @@ class MainActivity : ComponentActivity() {
                     yesterdayTrackCount = yesterday?.let { y -> saved.count { it.dayKey == y.dayKey } } ?: SampleData.yesterdayTrackCount,
                     onReplay = { if (yesterday != null) toggle(File(yesterday.filePath)) else makeAndPlay(Genre.POP_BALLAD, Drive.SMOOTH) },
                     onOpenAlbum = { go(Screen.ALBUM) },
+                    replayState = if (yesterday != null) stateOf(File(yesterday.filePath))
+                    else stateOf(demoFile(Genre.POP_BALLAD, Drive.SMOOTH), key(Genre.POP_BALLAD, Drive.SMOOTH)),
                 )
             }
             Screen.ARRIVAL -> ArrivalScreen(
@@ -192,6 +197,7 @@ class MainActivity : ComponentActivity() {
                 sample = demoSample,
                 onSample = { g, d -> demoSample = g to d; makeAndPlay(g, d) },
                 onMakeNow = { makeArrival(demoSample?.first ?: genre, demoDrive) },
+                sampleState = { g, d -> stateOf(demoFile(g, d), key(g, d)) },
             )
             Screen.SETTINGS -> SettingsScreen(
                 barMode = barMode, onBarMode = { barMode = it; app.barMode = it },
@@ -277,15 +283,27 @@ class MainActivity : ComponentActivity() {
         if (making?.isActive == true) { toast("곡을 만드는 중이에요"); return }
         player.stop()
         if (!File(filesDir, "tracks/${key(g, d)}.wav").exists()) toast("주행 기록으로 곡을 만드는 중이에요")
+        makingKey = key(g, d)
         making = lifecycleScope.launch {
             try {
                 then(app.maker.make(g, bars(d), key(g, d)).file)
             } catch (t: Throwable) {
                 Log.e(TAG, "곡 만들기 실패", t)
                 toast("곡을 만들지 못했어요: ${t.message}")
+            } finally {
+                makingKey = null
             }
         }
     }
+
+    /** 이 곡 파일 버튼의 상태 (재생 중 / 만드는 중 / 멈춤) */
+    private fun stateOf(file: File?, makeKey: String? = null): PlayState = when {
+        file != null && playingFile == file -> PlayState.PLAYING
+        makeKey != null && makingKey == makeKey -> PlayState.LOADING
+        else -> PlayState.IDLE
+    }
+
+    private fun demoFile(g: Genre, d: Drive) = File(filesDir, "tracks/${key(g, d)}.wav")
 
     private fun toggleArrival() {
         val f = arrivalFile
