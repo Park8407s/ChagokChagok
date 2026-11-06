@@ -5,6 +5,8 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import java.io.File
 
 /**
@@ -35,33 +37,48 @@ class OstPlayer(context: Context) {
         .build()
     private var player: MediaPlayer? = null
 
+    /**
+     * MediaPlayer 는 여러 스레드에서 동시에 쓰면 안 된다 (IllegalStateException 으로 앱이 죽음).
+     * 기록 서비스는 백그라운드 스레드에서 play/stop 을 부르고 화면은 메인 스레드에서 진행률을 읽으므로,
+     * 모든 조작을 메인 스레드 한 곳으로 모은다.
+     */
+    private val main = Handler(Looper.getMainLooper())
+    private fun onMain(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block() else main.post(block)
+    }
+
     /** 지금 재생 중인 파일 */
-    var current: File? = null
+    @Volatile var current: File? = null
         private set
 
-    fun play(file: File, onDone: () -> Unit = {}) {
-        stop()
-        if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) return
-        current = file
-        player = MediaPlayer().apply {
-            setAudioAttributes(attrs)
-            setDataSource(file.absolutePath)
-            setOnCompletionListener { stop(); onDone() }
-            prepare()
-            start()
+    fun play(file: File, onDone: () -> Unit = {}) = onMain {
+        stopNow()
+        if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) return@onMain
+        try {
+            player = MediaPlayer().apply {
+                setAudioAttributes(attrs)
+                setDataSource(file.absolutePath)
+                setOnCompletionListener { stopNow(); onDone() }
+                prepare()
+                start()
+            }
+            current = file
+        } catch (t: Throwable) {
+            android.util.Log.e("OstPlayer", "재생 실패: $file", t)
+            stopNow()
         }
     }
 
-    fun stop() {
+    fun stop() = onMain { stopNow() }
+
+    private fun stopNow() {
         player?.release()
         player = null
         current = null
         audio.abandonAudioFocusRequest(focus)
     }
 
-    val isPlaying: Boolean get() = player?.isPlaying == true
-
-    /** 0..1 */
+    /** 0..1 (메인 스레드에서 읽는다. 해제 중인 플레이어를 만나도 죽지 않게 0 으로) */
     val progress: Float
-        get() = player?.let { if (it.duration > 0) it.currentPosition.toFloat() / it.duration else 0f } ?: 0f
+        get() = player?.let { runCatching { if (it.duration > 0) it.currentPosition.toFloat() / it.duration else 0f }.getOrDefault(0f) } ?: 0f
 }

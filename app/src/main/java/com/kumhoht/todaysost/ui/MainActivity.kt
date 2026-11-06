@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
 
     /** 지나온 화면 (‹ 이전·뒤로 가기용). 홈으로 가면 비운다 */
     private val backStack = androidx.compose.runtime.mutableStateListOf<Screen>()
-    /** 2분 미만 운행 안내 */
+    /** 최소 운행 시간 미만 안내 */
     private var shortDrive by mutableStateOf<com.kumhoht.todaysost.ShortDrive?>(null)
     /** 도착 화면에 보여 줄 곡이 있는지 ('방금 곡' 버튼) */
     private var hasArrival by mutableStateOf(false)
@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch { app.db.tracks().all().collect { tracks = it } }
-        // 2분 미만 운행으로 도착: 홈으로 와서 안내 카드를 띄운다 (30분 지난 안내는 버림)
+        // 최소 운행 시간 미만으로 도착: 홈으로 와서 안내 카드를 띄운다 (30분 지난 안내는 버림)
         lifecycleScope.launch {
             app.recording.collect { st ->
                 val sd = st.shortDrive?.takeIf { System.currentTimeMillis() - it.endedAt < 30 * 60_000L }

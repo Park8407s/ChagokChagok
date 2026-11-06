@@ -19,7 +19,7 @@ import com.kumhoht.todaysost.ui.theme.Ost
 import com.kumhoht.todaysost.ui.theme.OstType
 
 /**
- * 짧은 운전(2분 미만)으로 도착했을 때 안내. 트랙이 안 만들어진 이유를 알려 준다.
+ * 짧은 운전(최소 운행 시간 미만)으로 도착했을 때 안내. 트랙이 안 만들어진 이유를 알려 준다.
  * 화면 아래쪽에 떠 있는 카드 (닫기 또는 잠시 뒤 자동으로 사라짐).
  */
 @Composable
@@ -32,7 +32,10 @@ fun ShortDriveNotice(seconds: Int, onClose: () -> Unit, modifier: Modifier = Mod
         Spacer(Modifier.size(26.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("${formatDuration(seconds)} 운전했어요. 이번 운전은 곡으로 만들지 않았어요.", style = OstType.Body)
-            Text("2분 이상 운전하면 도착할 때 곡을 만들어 들려드려요.", style = OstType.Body.copy(color = Ost.TextSub))
+            Text(
+                "${formatDuration(com.kumhoht.todaysost.core.model.TrackRules.MIN_DRIVE_SECONDS)} 이상 운전하면 도착할 때 곡을 만들어 들려드려요.",
+                style = OstType.Body.copy(color = Ost.TextSub),
+            )
         }
         Spacer(Modifier.size(20.dp))
         OutlineButton(onClose, height = 66.dp, contentPadding = PaddingValues(horizontal = 30.dp)) {

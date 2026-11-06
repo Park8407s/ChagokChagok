@@ -30,7 +30,7 @@ release 빌드에는 디버그용 기능(adb SIM 명령, 소리 엔진 테스트
 | M1-2~4 | 주행 규제 중 동작, 오디오 포커스, 차량 데이터 수신 | ✅ 에뮬레이터 확인 (아래 'M1 확인 결과') |
 | 주행 기록 | Foreground Service 기록 → 도착 시 작곡·저장(Room)·재생 → 도착 화면 | ✅ Virtual Console 실제 신호로 확인 |
 | M2 | 엔진 포팅 (`drive_session.py`, 작곡 엔진 v3 + 동요는 v2 → Kotlin), 렌더·마스터링·재생 연결 | ✅ Python 원본과 악보 비트 단위 일치 (테스트 12개) |
-| M3 화면 | 홈·도착·앨범·데모·설정 화면 (Figma 시안 기준), 화면 이동·뒤로 가기, 재생 상태 표시, 2분 미만 안내, 데이터 초기화·앱 끄기 | 🟡 공유·'11월의 OST 듣기'·월간 OST 미구현, 출품용 샘플 10곡 미내장 (데모는 그 자리에서 생성) |
+| M3 화면 | 홈·도착·앨범·데모·설정 화면 (Figma 시안 기준), 화면 이동·뒤로 가기, 재생 상태 표시, 최소 운행 시간 미만 안내, 데이터 초기화·앱 끄기 | 🟡 공유·'11월의 OST 듣기'·월간 OST 미구현, 출품용 샘플 10곡 미내장 (데모는 그 자리에서 생성) |
 
 ## M1 확인 결과 (Pleos Connect 에뮬레이터 v2.1.0, 2026-11-06)
 
@@ -59,7 +59,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 
 ```
 주행 시작 → 차속/기어/깜빡이 샘플링 (화면·소리 없이 기록만)
-도착(기어 P + 0km/h) → 2분 미만이면 폐기
+도착(기어 P + 0km/h) → 최소 운행 시간(테스트 버전 30초, 기획 2분) 미만이면 폐기
             → 마디 분할 (기본 40초 / 데모 5초 = 1마디)
             → 장르 규칙으로 악보 생성
             → FluidSynth 오프라인 렌더 → 마스터링 → 오디오 파일
@@ -87,7 +87,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 | 데모 | 가상 주행 샘플 (아래 '심사용 데모') |
 | 설정 | 곡 만들기(기본/데모 모드), 개인정보(데이터 초기화), 오픈소스 라이선스, 앱 정보(앱 끄기) |
 
-- **2분 미만 운행은 곡을 만들지 않습니다.** 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
+- **30초 미만 운행은 곡을 만들지 않습니다** (⚠ 테스트 버전 값. 기획 확정값은 2분이며 `TrackRules.MIN_DRIVE_SECONDS` 한 줄로 바꿉니다). 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
 - 재생 버튼은 상태를 표시합니다: 멈춤 `▶ 다시 듣기` / 곡 만드는 중 `준비 중…` / 재생 중 노란 `⏸ 멈추기`.
 - **데이터 초기화** (설정 → 개인정보): 트랙·곡 파일·장르·마디 모드 설정을 지웁니다. 주차 중에만, 확인 창을 거쳐 실행됩니다.
 - **앱 끄기** (설정 → 앱 정보): 기록 서비스와 재생을 멈추고 앱을 닫습니다. 앱을 다시 열거나 다음 시동 때 다시 켜집니다.
@@ -104,10 +104,10 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 4. 같은 장르의 A와 B를 비교해 들으면 "같은 길이라도 운전 습관에 따라 곡이 달라진다"를 확인할 수 있습니다 (B 는 급가속·급제동·과속이 소리와 커버의 노란 점으로 남음).
 
 **Virtual Console 로 실제 운전하기**
-1. 설정 → 곡 만들기 → **데모 모드**(주행 5초 = 1마디). 기본 모드(40초 = 1마디)는 짧은 시연에서 곡이 매우 짧아집니다 (2분 남짓 → 약 15초).
+1. 설정 → 곡 만들기 → **데모 모드**(주행 5초 = 1마디). 기본 모드(40초 = 1마디)는 짧은 시연에서 곡이 매우 짧아집니다 (30초 운전 → 약 9초, 2분 운전 → 약 15초).
 2. 홈에서 장르를 고릅니다.
 3. Virtual Console: Emulation Controls → Gear Selection **D** → **ACCEL** 을 1~2초씩 눌러 출발, **BRAKE** 로 정차, 깜빡이는 `turn` 검색 → Blink left/right.
-4. **2분 넘게** 운전한 뒤 0km/h 로 세우고 Gear **P** → 몇 초 안에 도착 화면이 열리고 곡이 재생됩니다. 앨범에도 오늘 날짜로 추가됩니다.
+4. **30초 넘게** 운전한 뒤 0km/h 로 세우고 Gear **P** → 몇 초 안에 도착 화면이 열리고 곡이 재생됩니다. 앨범에도 오늘 날짜로 추가됩니다.
 
 - 에뮬레이터는 제한속도가 항상 0이라 실제 운전으로는 과속이 잡히지 않습니다. 과속 효과는 데모의 **B 급하게** 로 들어 보세요.
 - 출품용 완성 트랙 10곡을 앱에 미리 넣는 작업은 아직 하지 않았습니다 (지금은 누르는 순간 엔진이 만듦).
@@ -147,10 +147,10 @@ adb logcat -s SynthSmoke OstSynth FluidSynth
 ```
 app/src/main/java/com/kumhoht/todaysost/
   OstApp.kt          앱 전체 객체 (DB·차량 신호·재생기·설정), 디버그 SIM 브로드캐스트
-  core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 2분 기준
+  core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 최소 운행 시간(테스트 30초)
   vehicle/           Telemetry: 차속·기어(AAOS), 브레이크·깜빡이(Pleos), 제한속도(NaviHelper), 주행 규제
   recorder/          DriveService: 1초 기록 Foreground Service, 도착 시 작곡·저장·재생, 앱 끄기, BootReceiver
-  engine/session/    DriveSession(drive_session.py 포팅: 마디 나누기), DriveRecorder(운행 시작·끝·2분 판정)
+  engine/session/    DriveSession(drive_session.py 포팅: 마디 나누기), DriveRecorder(운행 시작·끝·최소 시간 판정)
   engine/composer/   ComposerV3(drive_music_v3.py 포팅), KidsComposerV2(동요, v2), PyRandom(Python 난수), 시연 시나리오
   engine/synth/      FluidSynth JNI(OfflineRenderer), ScoreRenderer(악보 → 이벤트), Mastering
   engine/TrackMaker  마디 → 작곡 → 렌더 → 마스터링 → WAV

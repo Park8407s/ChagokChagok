@@ -90,7 +90,7 @@ class OstApp : Application() {
 data class RecorderState(
     val recording: Boolean = false,
     val seconds: Int = 0,
-    /** 2분 미만이라 트랙을 만들지 않은 마지막 운행 (화면 안내용). 안내를 닫으면 null */
+    /** 최소 운행 시간 미만이라 트랙을 만들지 않은 마지막 운행 (화면 안내용). 안내를 닫으면 null */
     val shortDrive: ShortDrive? = null,
     /** 곡을 만드는 중 */
     val composing: Boolean = false,

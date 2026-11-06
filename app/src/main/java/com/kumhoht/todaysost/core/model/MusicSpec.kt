@@ -23,8 +23,12 @@ enum class BarMode(val label: String, val secondsPerBar: Int) {
 }
 
 object TrackRules {
-    /** 2분 미만 운행은 트랙을 만들지 않는다. */
-    const val MIN_DRIVE_MILLIS: Long = 2 * 60 * 1000L
+    /**
+     * 이보다 짧은 운행은 트랙을 만들지 않는다. 화면 문구·로그·테스트가 모두 이 값을 쓴다.
+     * ⚠ 테스트 버전 값 30초. 기획 확정값은 120초(2분) → 출품 전에 120 으로 되돌릴 것.
+     */
+    const val MIN_DRIVE_SECONDS: Int = 30
+    const val MIN_DRIVE_MILLIS: Long = MIN_DRIVE_SECONDS * 1000L
 
     /** 4/4박자 기준 마디 수에 해당하는 곡 길이(초). */
     fun songSeconds(bars: Int, genre: Genre, beatsPerBar: Int = 4): Double =

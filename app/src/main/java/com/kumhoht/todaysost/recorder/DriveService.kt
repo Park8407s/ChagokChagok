@@ -16,6 +16,7 @@ import androidx.core.app.ServiceCompat
 import com.kumhoht.todaysost.OstApp
 import com.kumhoht.todaysost.ShortDrive
 import com.kumhoht.todaysost.R
+import com.kumhoht.todaysost.core.model.TrackRules
 import com.kumhoht.todaysost.data.BarCodec
 import com.kumhoht.todaysost.data.TrackEntity
 import com.kumhoht.todaysost.engine.session.DriveRecorder
@@ -33,7 +34,7 @@ import java.util.Locale
 /**
  * 주행 기록 Foreground Service.
  * - 1초마다 차량 값을 기록 (주행 중에는 화면도 소리도 없다)
- * - 도착(기어 P + 0km/h): 2분 미만이면 버리고, 아니면 마디 → 작곡 → 렌더 → 저장 → 재생
+ * - 도착(기어 P + 0km/h): 최소 운행 시간(TrackRules.MIN_DRIVE_SECONDS) 미만이면 버리고, 아니면 마디 → 작곡 → 렌더 → 저장 → 재생
  * 알림은 소리·진동 없는 상태 알림만 쓴다.
  */
 class DriveService : Service() {
@@ -78,8 +79,8 @@ class DriveService : Service() {
 
     private suspend fun onArrived(trip: DriveRecorder.Trip) {
         if (trip.tooShort) {
-            Log.i(TAG, "${trip.seconds}초 운행: 2분 미만이라 트랙을 만들지 않음")
-            // 화면에 "N분 운전했어요. 2분 이상 운전하면…" 안내 (홈이 보이도록 앱을 앞으로)
+            Log.i(TAG, "${trip.seconds}초 운행: 최소 ${TrackRules.MIN_DRIVE_SECONDS}초 미만이라 트랙을 만들지 않음")
+            // 화면에 "N초 운전했어요. 30초 이상 운전하면…" 안내 (홈이 보이도록 앱을 앞으로)
             app.setRecording(app.recording.value.copy(shortDrive = ShortDrive(trip.seconds, trip.endedAt)))
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             return

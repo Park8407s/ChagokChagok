@@ -33,8 +33,10 @@ class DriveRecorderTest {
     }
 
     @Test
-    fun 이분_미만은_트랙을_만들지_않는다() {
-        assertTrue(drive(100)!!.tooShort)
-        assertFalse(drive(120)!!.tooShort)
+    fun 최소_운행_시간_미만은_트랙을_만들지_않는다() {
+        val min = com.kumhoht.todaysost.core.model.TrackRules.MIN_DRIVE_SECONDS // 테스트 버전 30초, 기획 120초
+        // drive(n) = D n초 + 도착 1초 → 운행 n+1초
+        assertTrue(drive(min - 2)!!.tooShort)
+        assertFalse(drive(min - 1)!!.tooShort)
     }
 }
