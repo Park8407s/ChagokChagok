@@ -25,7 +25,7 @@ enum class BarMode(val label: String, val secondsPerBar: Int) {
 object TrackRules {
     /**
      * 이보다 짧은 운행은 트랙을 만들지 않는다. 화면 문구·로그·테스트가 모두 이 값을 쓴다.
-     * ⚠ 테스트 버전 값 30초. 기획 확정값은 120초(2분) → 출품 전에 120 으로 되돌릴 것.
+     * 출품 기준 30초 (2026-11-06 결정. 인수인계 문서의 기획값 2분에서 변경: 시연·심사에서 짧게 운전해도 곡이 나오도록).
      */
     const val MIN_DRIVE_SECONDS: Int = 30
     const val MIN_DRIVE_MILLIS: Long = MIN_DRIVE_SECONDS * 1000L

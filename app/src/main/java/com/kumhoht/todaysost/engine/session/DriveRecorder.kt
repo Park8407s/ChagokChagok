@@ -8,7 +8,7 @@ import kotlin.math.roundToInt
  *
  * - 시작: 기어가 P 를 벗어난 첫 순간 (drive_session.segment 와 같은 기준)
  * - 끝:  그 뒤 기어 P + 차속 0 (= 도착)
- * - 최소 운행 시간(TrackRules.MIN_DRIVE_SECONDS, 테스트 버전 30초 / 기획 2분) 미만은 트랙을 만들지 않는다 ([Trip.tooShort])
+ * - 최소 운행 시간(TrackRules.MIN_DRIVE_SECONDS, 30초) 미만은 트랙을 만들지 않는다 ([Trip.tooShort])
  * 주행 중에는 화면도 소리도 없이 기록만 한다 (호출하는 쪽 책임).
  */
 class DriveRecorder {

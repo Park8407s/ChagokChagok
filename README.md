@@ -59,7 +59,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 
 ```
 주행 시작 → 차속/기어/깜빡이 샘플링 (화면·소리 없이 기록만)
-도착(기어 P + 0km/h) → 최소 운행 시간(테스트 버전 30초, 기획 2분) 미만이면 폐기
+도착(기어 P + 0km/h) → 30초 미만이면 폐기
             → 마디 분할 (기본 40초 / 데모 5초 = 1마디)
             → 장르 규칙으로 악보 생성
             → FluidSynth 오프라인 렌더 → 마스터링 → 오디오 파일
@@ -87,7 +87,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 | 데모 | 가상 주행 샘플 (아래 '심사용 데모') |
 | 설정 | 곡 만들기(기본/데모 모드), 개인정보(데이터 초기화), 오픈소스 라이선스, 앱 정보(앱 끄기) |
 
-- **30초 미만 운행은 곡을 만들지 않습니다** (⚠ 테스트 버전 값. 기획 확정값은 2분이며 `TrackRules.MIN_DRIVE_SECONDS` 한 줄로 바꿉니다). 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
+- **30초 미만 운행은 곡을 만들지 않습니다** (인수인계 문서의 기획값 2분에서 출품 기준 30초로 변경. 값은 `TrackRules.MIN_DRIVE_SECONDS` 한 곳). 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
 - 재생 버튼은 상태를 표시합니다: 멈춤 `▶ 다시 듣기` / 곡 만드는 중 `준비 중…` / 재생 중 노란 `⏸ 멈추기`.
 - **데이터 초기화** (설정 → 개인정보): 트랙·곡 파일·장르·마디 모드 설정을 지웁니다. 주차 중에만, 확인 창을 거쳐 실행됩니다.
 - **앱 끄기** (설정 → 앱 정보): 기록 서비스와 재생을 멈추고 앱을 닫습니다. 앱을 다시 열거나 다음 시동 때 다시 켜집니다.
@@ -147,7 +147,7 @@ adb logcat -s SynthSmoke OstSynth FluidSynth
 ```
 app/src/main/java/com/kumhoht/todaysost/
   OstApp.kt          앱 전체 객체 (DB·차량 신호·재생기·설정), 디버그 SIM 브로드캐스트
-  core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 최소 운행 시간(테스트 30초)
+  core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 최소 운행 시간 30초
   vehicle/           Telemetry: 차속·기어(AAOS), 브레이크·깜빡이(Pleos), 제한속도(NaviHelper), 주행 규제
   recorder/          DriveService: 1초 기록 Foreground Service, 도착 시 작곡·저장·재생, 앱 끄기, BootReceiver
   engine/session/    DriveSession(drive_session.py 포팅: 마디 나누기), DriveRecorder(운행 시작·끝·최소 시간 판정)
