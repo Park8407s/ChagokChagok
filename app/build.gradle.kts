@@ -5,6 +5,7 @@ import java.util.zip.ZipFile
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose) // Jetpack Compose 화면
+    alias(libs.plugins.ksp)            // Room DB 코드 자동 생성
 }
 
 // ───────────── FluidSynth (LGPL-2.1, 동적 링크 .so) ─────────────
@@ -148,6 +149,11 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // 로컬 DB (Room): 트랙·하루 앨범
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Pleos Connect SDK (차량: 기어·깜빡이 등 / 내비: 제한속도·도착)
     implementation(libs.pleos.vehicle)

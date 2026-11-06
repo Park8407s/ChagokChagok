@@ -21,7 +21,17 @@ class OstPlayer(context: Context) {
         .build()
     private val focus = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(attrs)
-        .setOnAudioFocusChangeListener { change -> if (change == AudioManager.AUDIOFOCUS_LOSS) stop() }
+        .setOnAudioFocusChangeListener { change ->
+            // M1-3 확인용 로그: 내비 안내가 끼어들 때 어떤 포커스 변화가 오는지 (adb logcat -s OstPlayer)
+            android.util.Log.i("OstPlayer", "audio focus → " + when (change) {
+                AudioManager.AUDIOFOCUS_GAIN -> "GAIN"
+                AudioManager.AUDIOFOCUS_LOSS -> "LOSS"
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> "LOSS_TRANSIENT"
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> "LOSS_TRANSIENT_CAN_DUCK"
+                else -> "$change"
+            })
+            if (change == AudioManager.AUDIOFOCUS_LOSS) stop()
+        }
         .build()
     private var player: MediaPlayer? = null
 

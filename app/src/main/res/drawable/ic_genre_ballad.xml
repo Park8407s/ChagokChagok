@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 장르: 발라드 (달) (시안을 보고 다시 그림, 24×24 선 아이콘) -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M19.5,14.8A8,8 0,1 1,9.2,4.5A6.3,6.3 0,0 0,19.5,14.8z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M18.2,2.6l0.75,1.65l1.65,0.75l-1.65,0.75l-0.75,1.65l-0.75,-1.65l-1.65,-0.75l1.65,-0.75z" />
+<!-- 장르: 발라드 (달) (원본: gen.py 시안 아이콘, 48×48 선 3) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="48" android:viewportHeight="48">
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M30 8a16 16 0 1 0 10 26A13 13 0 0 1 30 8z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M36 10l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" />
 </vector>

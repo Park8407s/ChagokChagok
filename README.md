@@ -13,9 +13,33 @@
 |---|---|---|
 | M0 | 프로젝트 생성, 빈 화면 | ✅ |
 | M1-1 | FluidSynth 연결, SF3 사운드폰트로 오프라인 렌더 | ✅ (에뮬레이터 확인) |
-| M1-2~4 | 주행 규제 중 동작, 오디오 포커스, 차량 데이터 수신 | 예정 |
+| M1-2~4 | 주행 규제 중 동작, 오디오 포커스, 차량 데이터 수신 | ✅ 에뮬레이터 확인 (아래 'M1 확인 결과') |
+| 주행 기록 | Foreground Service 기록 → 도착 시 작곡·저장(Room)·재생 → 도착 화면 | ✅ Virtual Console 실제 신호로 확인 |
 | M2 | 엔진 포팅 (`drive_session.py`, 작곡 엔진 v3 + 동요는 v2 → Kotlin), 렌더·마스터링·재생 연결 | ✅ Python 원본과 악보 비트 단위 일치 (테스트 12개) |
-| M3 화면 | 홈·도착·앨범·데모·설정(라이선스) 화면을 Figma 시안대로 구현 (예시 데이터) | 🟡 화면만 (재생·저장 미연결) |
+| M3 화면 | 홈·도착·앨범·데모·설정(라이선스) 화면을 Figma 시안대로 구현 | 🟡 재생·저장 연결 (기록 없으면 시안 예시 데이터), 공유·월간 재생 미구현 |
+
+## M1 확인 결과 (Pleos Connect 에뮬레이터 v2.1.0, 2026-11-06)
+
+| 항목 | 결과 |
+|---|---|
+| 차속 수신 | ✅ AAOS `PERF_VEHICLE_SPEED` (ACCEL 을 누르면 0 → 72km/h 값이 들어옴) |
+| 기어 수신 | ✅ AAOS `GEAR_SELECTION` (P↔D) |
+| 깜빡이 수신 | ✅ Pleos `getTurnSignal()` (`pleos.car.permission.CAR_LIGHTS`), Blink left/right/Off |
+| 제한속도 | ⚠ NaviHelper 연결은 되지만 에뮬레이터는 항상 0 (붕붕멍과 같은 GPS 한계) → 과속 규칙은 데모 시나리오로 시연 |
+| 주행 규제 중 기록 | ✅ 기어 D 에서 `uxRestricted=true`, 앱 화면은 가려지고 Foreground Service 는 계속 1초 기록 |
+| 주행 중 백그라운드 재생 | ✅ 규제 중에도 MediaPlayer 가 `state:started` 로 계속 재생됨 → 실시간 재생을 확장 단계에서 검토할 수 있음 (1차는 주행 중 소리 없음 유지) |
+| 내비 안내와 겹칠 때 | ✅ 내비 안내(`USAGE_ASSISTANCE_NAVIGATION_GUIDANCE`, GAIN_TRANSIENT_MAY_DUCK)는 별도 출력(`bus1_navigation_out`)으로 동시에 나오고, 음악은 포커스를 잃지 않음. 에뮬레이터는 HAL 더킹을 쓰지 않아 음악 음량은 그대로 → **실차에서 더킹 확인 필요** |
+| 도착 → 곡 | ✅ 143초 주행 → P → 8마디(기본 모드) → 15초 곡 저장·자동 재생·도착 화면 |
+
+디버그 빌드 확인용 명령 (Virtual Console 없이):
+
+```bash
+adb shell am broadcast -a com.kumhoht.todaysost.SIM --es gear D --ef speed 60
+adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez navVoice true
+adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez playDemo true
+adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez clear true
+adb logcat -s Telemetry DriveService TrackMaker OstPlayer
+```
 
 ## 동작 방식
 
