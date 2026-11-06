@@ -3,31 +3,33 @@ package com.kumhoht.todaysost.ui
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.kumhoht.todaysost.BuildConfig
-import com.kumhoht.todaysost.R
+import com.kumhoht.todaysost.core.model.BarMode
+import com.kumhoht.todaysost.core.model.Genre
 import com.kumhoht.todaysost.engine.synth.SynthSmokeTest
+import com.kumhoht.todaysost.ui.components.OstStatusBar
+import com.kumhoht.todaysost.ui.components.Screen
+import com.kumhoht.todaysost.ui.model.SampleData
+import com.kumhoht.todaysost.ui.model.TrackUi
+import com.kumhoht.todaysost.ui.screens.AlbumScreen
+import com.kumhoht.todaysost.ui.screens.ArrivalScreen
+import com.kumhoht.todaysost.ui.screens.DemoScreen
+import com.kumhoht.todaysost.ui.screens.Drive
+import com.kumhoht.todaysost.ui.screens.HomeScreen
+import com.kumhoht.todaysost.ui.screens.SettingsScreen
 import com.kumhoht.todaysost.ui.theme.Ost
 import com.kumhoht.todaysost.ui.theme.OstTheme
 import kotlinx.coroutines.Dispatchers
@@ -36,26 +38,59 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * 홈 화면 (임시). 도착 화면·앨범·가상 주행 샘플은 M3 이후에 붙인다.
- * 디버그 빌드에는 M1-1 확인용 '소리 엔진 테스트' 버튼이 있다.
- *   adb 로 바로 실행: adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --ez synthTest true
+ * 화면 전환과 상태 (임시: 시안의 예시 데이터로 그린다).
+ * 실제 주행 기록·작곡 엔진·재생이 붙으면 ViewModel 로 옮긴다.
+ *
+ * adb 로 화면 바로 열기 (디버그 빌드):
+ *   adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --es screen ARRIVAL --es drive ROUGH
+ *   adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --ez synthTest true
  */
 class MainActivity : ComponentActivity() {
-    private var status by mutableStateOf<String?>(null)
-    private var running by mutableStateOf(false)
+    private var screen by mutableStateOf(Screen.HOME)
+    private var genre by mutableStateOf(Genre.US_POP)
+    private var barMode by mutableStateOf(BarMode.NORMAL)
+    private var demoDrive by mutableStateOf(Drive.SMOOTH)
+    private var demoSample by mutableStateOf<Pair<Genre, Drive>?>(Genre.US_POP to Drive.SMOOTH)
+    private var arrival by mutableStateOf<TrackUi>(SampleData.smoothTrack())
+    private var synthStatus by mutableStateOf<String?>(null)
+    private var synthRunning by mutableStateOf(false)
     private var player: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleDebugIntent()
         setContent {
             OstTheme {
-                HomePlaceholder(
-                    debugStatus = status,
-                    onSynthTest = if (BuildConfig.DEBUG && !running) ::runSynthTest else null,
-                )
+                Column(Modifier.fillMaxSize().background(Ost.Bg)) {
+                    OstStatusBar(screen) { screen = it }
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        when (screen) {
+                            Screen.HOME -> HomeScreen(
+                                selected = genre, onSelect = { genre = it },
+                                yesterday = SampleData.yesterday, yesterdayTrackCount = SampleData.yesterdayTrackCount,
+                                onReplay = ::notReady, onOpenAlbum = { screen = Screen.ALBUM },
+                            )
+                            Screen.ARRIVAL -> ArrivalScreen(
+                                track = arrival, progress = 0f, showDemoEntry = true,
+                                onPlay = ::notReady, onShare = ::notReady, onOpenDemo = { screen = Screen.DEMO },
+                            )
+                            Screen.ALBUM -> AlbumScreen(SampleData.days, SampleData.month, onPlayMonth = ::notReady)
+                            Screen.DEMO -> DemoScreen(
+                                smooth = SampleData.smoothTrack(), rough = SampleData.roughTrack(),
+                                drive = demoDrive, onDrive = { demoDrive = it },
+                                sample = demoSample, onSample = { g, d -> demoSample = g to d; notReady() },
+                                onMakeNow = { showArrival(demoSample?.first ?: genre, demoDrive) },
+                            )
+                            Screen.SETTINGS -> SettingsScreen(
+                                barMode = barMode, onBarMode = { barMode = it },
+                                onSynthTest = if (BuildConfig.DEBUG && !synthRunning) ::runSynthTest else null,
+                                synthStatus = synthStatus,
+                            )
+                        }
+                    }
+                }
             }
         }
-        if (BuildConfig.DEBUG && intent.getBooleanExtra("synthTest", false)) runSynthTest()
     }
 
     override fun onDestroy() {
@@ -63,11 +98,30 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    private fun showArrival(g: Genre, d: Drive) {
+        arrival = if (d == Drive.SMOOTH) SampleData.smoothTrack(g) else SampleData.roughTrack(g)
+        screen = Screen.ARRIVAL
+    }
+
+    /** 작곡 엔진(M2) 전이라 재생·공유는 아직 없다 */
+    private fun notReady() {
+        Toast.makeText(this, "작곡 엔진을 붙인 뒤 재생할 수 있어요", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleDebugIntent() {
+        if (!BuildConfig.DEBUG) return
+        intent.getStringExtra("screen")?.let { name -> Screen.entries.firstOrNull { it.name == name }?.let { screen = it } }
+        intent.getStringExtra("drive")?.let { name ->
+            Drive.entries.firstOrNull { it.name == name }?.let { demoDrive = it; showArrival(genre, it) }
+        }
+        if (intent.getBooleanExtra("synthTest", false)) { screen = Screen.SETTINGS; runSynthTest() }
+    }
+
     private fun runSynthTest() {
-        running = true
-        status = "렌더링 중..."
+        synthRunning = true
+        synthStatus = "렌더링 중..."
         lifecycleScope.launch {
-            val text = try {
+            synthStatus = try {
                 val result = withContext(Dispatchers.Default) { SynthSmokeTest.run(applicationContext) }
                 play(result.file)
                 result.summary()
@@ -75,8 +129,7 @@ class MainActivity : ComponentActivity() {
                 android.util.Log.e("SynthSmoke", "실패", t)
                 "실패: ${t.message}"
             }
-            status = text
-            running = false
+            synthRunning = false
         }
     }
 
@@ -92,32 +145,4 @@ class MainActivity : ComponentActivity() {
             start()
         }
     }
-}
-
-@Composable
-fun HomePlaceholder(debugStatus: String? = null, onSynthTest: (() -> Unit)? = null) {
-    Column(
-        Modifier.fillMaxSize().background(Ost.Night),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("♫", style = MaterialTheme.typography.displaySmall, color = Ost.Spot)
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall)
-        Text(stringResource(R.string.home_tagline), style = MaterialTheme.typography.bodyLarge, color = Ost.TextSoft)
-        if (BuildConfig.DEBUG) {
-            Spacer(Modifier.height(24.dp))
-            Button(onClick = { onSynthTest?.invoke() }, enabled = onSynthTest != null) {
-                Text("소리 엔진 테스트 (개발용)", style = MaterialTheme.typography.titleMedium)
-            }
-            debugStatus?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = Ost.TextSoft, textAlign = TextAlign.Center)
-            }
-        }
-    }
-}
-
-@Preview(widthDp = 1280, heightDp = 720)
-@Composable
-private fun HomePlaceholderPreview() {
-    OstTheme { HomePlaceholder() }
 }

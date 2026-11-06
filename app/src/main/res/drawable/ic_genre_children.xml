@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 장르: 동요 (풍선) (시안을 보고 다시 그림, 24×24 선 아이콘) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,2.5c3.6,0 6,2.9 6,6.4c0,3.9 -3.2,7.1 -6,7.1s-6,-3.2 -6,-7.1C6,5.4 8.4,2.5 12,2.5z" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M11,16l1,1.4l1,-1.4" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,17.4c-1.2,1.1 1.2,2 0,3.6" />
+</vector>
