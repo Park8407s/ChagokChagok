@@ -16,7 +16,7 @@
 | M1-2~4 | 주행 규제 중 동작, 오디오 포커스, 차량 데이터 수신 | ✅ 에뮬레이터 확인 (아래 'M1 확인 결과') |
 | 주행 기록 | Foreground Service 기록 → 도착 시 작곡·저장(Room)·재생 → 도착 화면 | ✅ Virtual Console 실제 신호로 확인 |
 | M2 | 엔진 포팅 (`drive_session.py`, 작곡 엔진 v3 + 동요는 v2 → Kotlin), 렌더·마스터링·재생 연결 | ✅ Python 원본과 악보 비트 단위 일치 (테스트 12개) |
-| M3 화면 | 홈·도착·앨범·데모·설정(라이선스) 화면을 Figma 시안대로 구현 | 🟡 재생·저장 연결 (기록 없으면 시안 예시 데이터), 공유·월간 재생 미구현 |
+| M3 화면 | 홈·도착·앨범·데모·설정 화면 (Figma 시안 기준), 화면 이동·뒤로 가기, 재생 상태 표시, 2분 미만 안내, 데이터 초기화·앱 끄기 | 🟡 공유·'11월의 OST 듣기'·월간 OST 미구현, 출품용 샘플 10곡 미내장 (데모는 그 자리에서 생성) |
 
 ## M1 확인 결과 (Pleos Connect 에뮬레이터 v2.1.0, 2026-11-06)
 
@@ -60,15 +60,43 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 | 트로트 | 134 |
 | 댄스 | 140 |
 
+## 사용 방법
+
+**화면 이동**: 맨 위 오른쪽 `홈 · (방금 곡) · 앨범 · 데모 · 설정` 버튼, 왼쪽 `‹ 이전` 버튼 또는 시스템 뒤로 가기.
+주행 중(기어 D·R)에는 플랫폼이 앱 화면을 가리고, 주차하면 다시 보입니다.
+
+| 화면 | 할 수 있는 것 |
+|---|---|
+| 홈 | 이번 운전의 장르 고르기 (저장됨), 어제의 OST 다시 듣기 |
+| 도착 | 운전이 끝나면 자동으로 열림. 곡 듣기·멈추기, 곡 해설(타임라인·이벤트·마지막 화음) |
+| 앨범 | 날짜별·트랙별 목록. 커버나 트랙 이름을 누르면 그 곡의 도착 화면 |
+| 데모 | 가상 주행 샘플 (아래 '심사용 데모') |
+| 설정 | 곡 만들기(기본/데모 모드), 개인정보(데이터 초기화), 오픈소스 라이선스, 앱 정보(앱 끄기) |
+
+- **2분 미만 운행은 곡을 만들지 않습니다.** 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
+- 재생 버튼은 상태를 표시합니다: 멈춤 `▶ 다시 듣기` / 곡 만드는 중 `준비 중…` / 재생 중 노란 `⏸ 멈추기`.
+- **데이터 초기화** (설정 → 개인정보): 트랙·곡 파일·장르·마디 모드 설정을 지웁니다. 주차 중에만, 확인 창을 거쳐 실행됩니다.
+- **앱 끄기** (설정 → 앱 정보): 기록 서비스와 재생을 멈추고 앱을 닫습니다. 앱을 다시 열거나 다음 시동 때 다시 켜집니다.
+- 저장된 트랙이 없으면 홈·앨범은 시안의 예시 데이터를 보여 줍니다.
+
 ## 심사용 데모 사용법
 
 > 데모용 기능이며 실제 서비스에서는 제외하거나 축소할 수 있습니다.
 
-(M3 이후 작성)
+**운전 없이 듣기 (데모 화면)**
+1. 위쪽 **데모** 버튼.
+2. 장르별 **A 부드럽게 / B 급하게** 버튼: 같은 출근길(15.0km · 17분 · 30마디)을 다르게 운전한 기록으로 곡을 만들어 재생합니다. 처음 누를 때 약 3초 걸리고(`만드는 중…`), 다시 누르면 멈춥니다.
+3. 위쪽 A/B 카드를 고르고 **가상 주행으로 지금 만들기** → 도착 화면이 열리고 곡이 재생됩니다.
+4. 같은 장르의 A와 B를 비교해 들으면 "같은 길이라도 운전 습관에 따라 곡이 달라진다"를 확인할 수 있습니다 (B 는 급가속·급제동·과속이 소리와 커버의 노란 점으로 남음).
 
-- '가상 주행 샘플 들어보기': 장르별 A/B 완성 트랙 10곡 (5장르 × 부드러운/급한 운전)
-- 가상 주행으로 지금 곡 만들기
-- 기본 모드 / 데모 모드 전환
+**Virtual Console 로 실제 운전하기**
+1. 설정 → 곡 만들기 → **데모 모드**(주행 5초 = 1마디). 기본 모드(40초 = 1마디)는 짧은 시연에서 곡이 매우 짧아집니다 (2분 남짓 → 약 15초).
+2. 홈에서 장르를 고릅니다.
+3. Virtual Console: Emulation Controls → Gear Selection **D** → **ACCEL** 을 1~2초씩 눌러 출발, **BRAKE** 로 정차, 깜빡이는 `turn` 검색 → Blink left/right.
+4. **2분 넘게** 운전한 뒤 0km/h 로 세우고 Gear **P** → 몇 초 안에 도착 화면이 열리고 곡이 재생됩니다. 앨범에도 오늘 날짜로 추가됩니다.
+
+- 에뮬레이터는 제한속도가 항상 0이라 실제 운전으로는 과속이 잡히지 않습니다. 과속 효과는 데모의 **B 급하게** 로 들어 보세요.
+- 출품용 완성 트랙 10곡을 앱에 미리 넣는 작업은 아직 하지 않았습니다 (지금은 누르는 순간 엔진이 만듦).
 
 ## 테스트 환경
 
@@ -91,7 +119,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 ./gradlew :app:testDebugUnitTest    # 단위 테스트
 ```
 
-**소리 엔진 확인 (디버그 빌드)**: 홈 화면의 '소리 엔진 테스트' 버튼, 또는
+**소리 엔진 확인 (디버그 빌드)**: 설정 → 앱 정보의 '소리 엔진 테스트' 버튼, 또는
 
 ```bash
 adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --ez synthTest true
@@ -100,21 +128,31 @@ adb logcat -s SynthSmoke OstSynth FluidSynth
 
 피아노·베이스·드럼(GeneralUser GS)과 스트링·브라스·코러스(FluidR3)를 렌더해 구간별·악기별 음량을 보여 주고 재생합니다.
 
-## 코드 구조 (계획)
+## 코드 구조
 
 ```
 app/src/main/java/com/kumhoht/todaysost/
-  core/model/        DriveSample, DriveSession, Track, DayAlbum, 장르·마디 규칙
-  recorder/          차량 데이터 수집 Foreground Service + 세션 기록
-  engine/session/    drive_session.py 포팅: 기본/데모 모드, 마디 분할
-  engine/composer/   작곡 엔진 (Python v1~v3 → Kotlin), 주행 로그 → 마디 → 악보
-  engine/synth/      FluidSynth JNI 래퍼 + 오프라인 렌더 + 마스터링 (NDK, CMake)
-  data/              Room, 파일 저장소, 하루/월간 앨범 집계
-  ui/                홈, 도착, 앨범('차곡차곡'), 데모, 설정
+  OstApp.kt          앱 전체 객체 (DB·차량 신호·재생기·설정), 디버그 SIM 브로드캐스트
+  core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 2분 기준
+  vehicle/           Telemetry: 차속·기어(AAOS), 브레이크·깜빡이(Pleos), 제한속도(NaviHelper), 주행 규제
+  recorder/          DriveService: 1초 기록 Foreground Service, 도착 시 작곡·저장·재생, 앱 끄기, BootReceiver
+  engine/session/    DriveSession(drive_session.py 포팅: 마디 나누기), DriveRecorder(운행 시작·끝·2분 판정)
+  engine/composer/   ComposerV3(drive_music_v3.py 포팅), KidsComposerV2(동요, v2), PyRandom(Python 난수), 시연 시나리오
+  engine/synth/      FluidSynth JNI(OfflineRenderer), ScoreRenderer(악보 → 이벤트), Mastering
+  engine/TrackMaker  마디 → 작곡 → 렌더 → 마스터링 → WAV
+  data/              Room(TrackEntity): 트랙·하루 앨범
+  ui/                MainActivity(화면 이동·뒤로 가기), OstPlayer(재생·오디오 포커스)
+  ui/screens/        홈·도착·앨범·데모·설정
+  ui/components/     앨범 커버 생성, 타임라인, 상단 줄, 안내·확인 창
+app/src/main/cpp/    ostsynth_jni.cpp (FluidSynth 동적 링크)
 app/src/main/assets/
   soundfonts/        GeneralUser GS, FluidR3_GM (SF3 압축본, 아래 '사운드폰트' 참고)
-  demo_tracks/       출품용 샘플 10트랙
+  licenses/          라이선스 전문
+tools/sf2subset/     사운드폰트 프리셋 추출·SF3 압축 도구 (개발 PC용)
+tools/parity/        원본 Python 엔진 악보 추출 (ParityTest 기준 데이터)
 ```
+
+테스트: `./gradlew :app:testDebugUnitTest` (21개). `ParityTest` 는 Kotlin 엔진이 원본 Python 엔진과 같은 악보를 내는지 음 단위로 비교합니다.
 
 ## 사운드폰트
 
