@@ -65,13 +65,13 @@ val fetchFluidSynth = tasks.register<FetchFluidSynth>("fetchFluidSynth") {
 }
 
 android {
-    namespace = "com.kumhoht.todaysost"
+    namespace = "com.kumhoht.chagokchagok"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.kumhoht.todaysost"
+        applicationId = "com.kumhoht.chagokchagok"
         minSdk = 28
         targetSdk = 37
         versionCode = 1
@@ -108,9 +108,9 @@ android {
 
     buildTypes {
         release {
-            // 공모전 제출용: 디버그 키로 서명해 바로 설치·실행되게 한다 (붕붕멍과 동일).
+            // 공모전 제출용: 디버그 키로 서명해 바로 설치·실행되게 한다 (붕붕냥과 동일).
             signingConfig = signingConfigs.getByName("debug")
-            // R8 최적화는 끈다: 붕붕멍에서 켰을 때 kotlin 라이브러리 IllegalAccessError 로 실행 직후 종료됨.
+            // R8 최적화는 끈다: 붕붕냥에서 켰을 때 kotlin 라이브러리 IllegalAccessError 로 실행 직후 종료됨.
             optimization {
                 enable = false
             }

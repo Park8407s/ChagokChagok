@@ -1,0 +1,278 @@
+package com.kumhoht.chagokchagok.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.kumhoht.chagokchagok.BuildConfig
+import com.kumhoht.chagokchagok.R
+import com.kumhoht.chagokchagok.core.model.BarMode
+import com.kumhoht.chagokchagok.ui.components.ConfirmDialog
+import com.kumhoht.chagokchagok.ui.components.OstIcon
+import com.kumhoht.chagokchagok.ui.components.OutlineButton
+import com.kumhoht.chagokchagok.ui.components.Pill
+import com.kumhoht.chagokchagok.ui.components.PrimaryButton
+import com.kumhoht.chagokchagok.ui.components.card
+import com.kumhoht.chagokchagok.ui.theme.Ost
+import com.kumhoht.chagokchagok.ui.theme.OstType
+
+enum class SettingsMenu(val label: String) {
+    COMPOSE("곡 만들기"), ALBUM_SHARE("앨범·공유"), PRIVACY("개인정보"), LICENSES("오픈소스 라이선스"), ABOUT("앱 정보")
+}
+
+private class LicenseItem(
+    val name: String, val badge: String, val role: String, val author: String, val detail: String,
+    /** assets/licenses 안의 전문 파일 (없으면 null) */
+    val asset: String?,
+)
+
+private val LICENSES = listOf(
+    LicenseItem(
+        "FluidSynth", "LGPL-2.1", "신디사이저 · 악보를 악기 소리로 연주 · ", "Peter Hanappe 외 기여자",
+        "수정 없이 동적 링크(.so)로 사용 · 소스 코드 github.com/FluidSynth/fluidsynth", null,
+    ),
+    LicenseItem(
+        "GeneralUser GS", "GeneralUser GS License v2.0", "기본 악기 소리 (사운드폰트) · ", "© S. Christian Collins",
+        "피아노·기타·베이스·드럼·신스 등 · 프로젝트 페이지 schristiancollins.com", "licenses/GeneralUser_GS_LICENSE.txt",
+    ),
+    LicenseItem(
+        "FluidR3_GM", "MIT License", "보조 악기 소리 (사운드폰트) · ", "© Frank Wen",
+        "스트링·브라스·코러스 등 · 저작권·허가 문구 전문 포함", "licenses/FluidR3_GM_copyright.txt",
+    ),
+)
+
+/** 그림 7. 설정 (오픈소스 라이선스는 시안대로, 나머지 메뉴는 1차 범위만) */
+@Composable
+fun SettingsScreen(
+    barMode: BarMode,
+    onBarMode: (BarMode) -> Unit,
+    onSynthTest: (() -> Unit)?,
+    synthStatus: String?,
+    trackCount: Int = 0,
+    onReset: () -> Unit = {},
+    onShutdown: () -> Unit = {},
+) {
+    var menu by remember { mutableStateOf(SettingsMenu.LICENSES) }
+    Row(Modifier.fillMaxSize().padding(start = 64.dp, end = 65.dp, top = 6.dp)) {
+        Column(Modifier.width(380.dp)) {
+            Row(Modifier.height(61.dp), verticalAlignment = Alignment.CenterVertically) {
+                OstIcon(R.drawable.ic_settings, Ost.Text, 46.dp)
+                Spacer(Modifier.size(16.dp))
+                Text("설정", style = OstType.Display.copy(fontSize = 34.sp))
+            }
+            Spacer(Modifier.height(30.dp))
+            SettingsMenu.entries.forEach { m ->
+                val on = m == menu
+                Text(
+                    m.label,
+                    style = OstType.Body.copy(color = if (on) Ost.Text else Ost.TextSub, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal),
+                    modifier = Modifier.fillMaxWidth().height(85.dp).clip(RoundedCornerShape(16.dp))
+                        .background(if (on) Ost.CardHigh else androidx.compose.ui.graphics.Color.Transparent)
+                        .clickable { menu = m }.padding(horizontal = 28.dp, vertical = 23.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(50.dp))
+        Column(Modifier.weight(1f)) {
+            when (menu) {
+                SettingsMenu.LICENSES -> Licenses()
+                SettingsMenu.COMPOSE -> ComposeSettings(barMode, onBarMode)
+                SettingsMenu.ABOUT -> About(onSynthTest, synthStatus, onShutdown)
+                SettingsMenu.PRIVACY -> Privacy(trackCount, onReset)
+                else -> Placeholder(menu.label)
+            }
+        }
+    }
+}
+
+@Composable
+private fun Licenses() {
+    var open by remember { mutableStateOf<LicenseItem?>(null) }
+    Text("오픈소스 라이선스", style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text(
+        "차곡차곡은 아래 오픈소스 소프트웨어와 악기 소리로 곡을 만듭니다. 라이선스 전문은 앱 안에 들어 있어\n네트워크 없이 볼 수 있어요.",
+        style = OstType.Lead.copy(lineHeight = 30.sp),
+    )
+    Spacer(Modifier.height(32.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(21.dp)) {
+        LICENSES.forEach { item ->
+            Row(Modifier.fillMaxWidth().height(181.dp).card().padding(start = 34.dp, end = 34.dp), verticalAlignment = Alignment.CenterVertically) {
+                OstIcon(R.drawable.ic_document, Ost.Yellow, 58.dp)
+                Spacer(Modifier.size(30.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(item.name, style = OstType.Title)
+                        Spacer(Modifier.size(15.dp))
+                        Text(
+                            item.badge, style = OstType.Label.copy(color = Ost.Text),
+                            modifier = Modifier.border(2.dp, Ost.Line, Pill).padding(horizontal = 18.dp, vertical = 5.dp),
+                        )
+                    }
+                    Row {
+                        Text(item.role, style = OstType.BodySmall)
+                        Text(item.author, style = OstType.BodySmall.copy(color = Ost.TextSub))
+                    }
+                    Text(item.detail, style = OstType.Label)
+                }
+                OutlineButton({ open = item }, Modifier.width(182.dp), height = 66.dp, contentPadding = PaddingValues(0.dp)) {
+                    Text("전문 보기", style = OstType.BodySmall)
+                    OstIcon(R.drawable.ic_chevron_right, Ost.Text, 25.dp)
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(21.dp))
+    Text("주차 중에만 표시 · 각 라이선스의 저작권·허가 문구를 원문 그대로 고지합니다.", style = OstType.Label)
+
+    open?.let { LicenseDialog(it) { open = null } }
+}
+
+@Composable
+private fun LicenseDialog(item: LicenseItem, onClose: () -> Unit) {
+    val context = LocalContext.current
+    val text = remember(item) {
+        item.asset?.let { runCatching { context.assets.open(it).bufferedReader().readText() }.getOrNull() }
+            ?: "${item.name} (${item.badge}) 전문은 다음 업데이트에서 앱에 포함됩니다.\n${item.detail}"
+    }
+    Dialog(onClose, DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(Modifier.width(1200.dp).height(900.dp).card(color = Ost.Bg, border = Ost.Line).padding(40.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${item.name} · ${item.badge}", style = OstType.Title, modifier = Modifier.weight(1f))
+                PrimaryButton("닫기", onClose, icon = null, height = 66.dp)
+            }
+            Spacer(Modifier.height(24.dp))
+            Box(Modifier.weight(1f).fillMaxWidth().card().padding(28.dp)) {
+                Text(text, style = OstType.Label.copy(color = Ost.Text, lineHeight = 30.sp), modifier = Modifier.verticalScroll(rememberScrollState()))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComposeSettings(barMode: BarMode, onBarMode: (BarMode) -> Unit) {
+    Text("곡 만들기", style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text("마디 길이를 고릅니다. 데모 모드는 짧은 운전으로도 곡을 들어볼 수 있게 한 심사·시연용 설정이에요.", style = OstType.Lead.copy(lineHeight = 30.sp))
+    Spacer(Modifier.height(32.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(21.dp)) {
+        BarMode.entries.forEach { mode ->
+            val on = mode == barMode
+            Column(
+                Modifier.weight(1f).height(181.dp).card(border = if (on) Ost.Yellow else null).clickable { onBarMode(mode) }.padding(34.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(mode.label, style = OstType.Title.copy(color = if (on) Ost.Yellow else Ost.Text))
+                Text("주행 ${mode.secondsPerBar}초 = 1마디", style = OstType.BodySmall.copy(color = Ost.TextSub))
+            }
+        }
+    }
+}
+
+@Composable
+private fun About(onSynthTest: (() -> Unit)?, synthStatus: String?, onShutdown: () -> Unit) {
+    var ask by remember { mutableStateOf(false) }
+    Text("앱 정보", style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text("차곡차곡 ${BuildConfig.VERSION_NAME}", style = OstType.Lead)
+    Spacer(Modifier.height(40.dp))
+    ActionCard(
+        title = "차곡차곡 끄기",
+        body = "운전 기록을 멈추고 앱을 닫아요. 꺼져 있는 동안 운전한 기록은 곡이 되지 않아요.\n앱을 다시 열거나 다음에 시동을 켜면 다시 켜져요.",
+        button = "끄기",
+        onClick = { ask = true },
+    )
+    if (ask) ConfirmDialog(
+        title = "차곡차곡을 끌까요?",
+        body = "꺼져 있는 동안은 운전해도 곡이 만들어지지 않아요.\n앱을 다시 열면 다시 켜져요.",
+        confirmText = "끄기",
+        onConfirm = { ask = false; onShutdown() },
+        onCancel = { ask = false },
+    )
+    if (BuildConfig.DEBUG) {
+        Spacer(Modifier.height(40.dp))
+        Column(Modifier.fillMaxWidth().card().padding(34.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("개발용 · 소리 엔진 테스트", style = OstType.Section.copy(color = Ost.Yellow))
+            Text("두 사운드폰트로 피아노·베이스·드럼·스트링·브라스·코러스를 렌더해 재생합니다.", style = OstType.Label)
+            PrimaryButton(if (onSynthTest == null) "렌더링 중..." else "소리 엔진 테스트", { onSynthTest?.invoke() }, height = 66.dp)
+            synthStatus?.let { Text(it, style = OstType.Label.copy(lineHeight = 28.sp)) }
+        }
+    }
+}
+
+@Composable
+private fun Privacy(trackCount: Int, onReset: () -> Unit) {
+    var ask by remember { mutableStateOf(false) }
+    Text("개인정보", style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text(
+        "운전 기록(속도·기어·깜빡이)과 만든 곡은 이 차 안에만 저장되고, 인터넷으로 보내지 않아요.",
+        style = OstType.Lead.copy(lineHeight = 30.sp),
+    )
+    Spacer(Modifier.height(40.dp))
+    ActionCard(
+        title = "내 데이터 모두 지우기",
+        body = "저장된 트랙 ${trackCount}개와 곡 파일, 고른 장르·마디 모드 설정을 지우고 처음 상태로 돌아가요.\n주차 중에만 지울 수 있어요.",
+        button = "초기화",
+        onClick = { ask = true },
+    )
+    if (ask) ConfirmDialog(
+        title = "데이터를 모두 지울까요?",
+        body = "내 OST 앨범의 트랙 ${trackCount}개와 곡 파일, 설정이 모두 지워져요.\n지운 데이터는 되돌릴 수 없어요.",
+        confirmText = "초기화",
+        onConfirm = { ask = false; onReset() },
+        onCancel = { ask = false },
+    )
+}
+
+/** 설명 + 오른쪽 버튼 하나 카드 (끄기·초기화) */
+@Composable
+private fun ActionCard(title: String, body: String, button: String, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().card().padding(horizontal = 34.dp, vertical = 30.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(title, style = OstType.Title)
+            Text(body, style = OstType.Label.copy(lineHeight = 30.sp))
+        }
+        Spacer(Modifier.width(30.dp))
+        OutlineButton(onClick, Modifier.width(180.dp), height = 72.dp, border = Ost.Yellow, contentPadding = PaddingValues(0.dp)) {
+            Text(button, style = OstType.Button.copy(color = Ost.Yellow))
+        }
+    }
+}
+
+@Composable
+private fun Placeholder(title: String) {
+    Text(title, style = OstType.Display)
+    Spacer(Modifier.height(25.dp))
+    Text("준비 중인 메뉴예요.", style = OstType.Lead)
+}

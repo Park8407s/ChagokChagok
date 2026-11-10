@@ -1,4 +1,4 @@
-# 붕붕멍(BoongBoongMung)과 같은 툴체인 버전을 쓴다.
+# 붕붕냥(BoongBoongMung)과 같은 툴체인 버전을 쓴다.
 # Room(KSP), Media3 ExoPlayer 등은 실제로 쓰는 단계에서 추가한다.
 [versions]
 agp = "9.4.1"

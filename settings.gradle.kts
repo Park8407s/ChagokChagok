@@ -27,6 +27,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TodaysOST"
+rootProject.name = "ChagokChagok"
 include(":app")
 include(":tools:sf2subset")  // 개발용: 사운드폰트 프리셋 추출 도구

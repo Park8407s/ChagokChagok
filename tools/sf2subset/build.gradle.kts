@@ -16,7 +16,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("com.kumhoht.todaysost.tools.sf2.MainKt")
+    mainClass.set("com.kumhoht.chagokchagok.tools.sf2.MainKt")
     // 원본 SF2(약 141MB)를 통째로 메모리에 올린다
     applicationDefaultJvmArgs = listOf("-Xmx2g", "-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8")
 }

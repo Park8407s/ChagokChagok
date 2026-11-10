@@ -1,4 +1,6 @@
-# 오늘의 OST (Today's OST)
+# 차곡차곡 (ChagokChagok)
+
+> 이전 이름: 오늘의 OST (Today's OST). 하루 동안 모인 트랙은 지금도 '오늘의 OST' 앨범이라고 부릅니다.
 
 차속, 가감속, 깜빡이, 정차, 과속 같은 **주행 데이터를 규칙 기반 작곡 엔진으로 연주**해서 운전할 때마다 세상에 하나뿐인 트랙을 만드는 Pleos Connect 차량용 앱입니다.
 도착하면 오늘의 트랙을 들려주고, 하루 동안 만든 트랙을 모아 '오늘의 OST' 앨범으로 남깁니다.
@@ -9,16 +11,16 @@
 
 ## APK 파일
 
-- 위치: [`apk/금호HT_오늘의OST_release.apk`](apk/금호HT_오늘의OST_release.apk) (약 54MB)
+- 위치: [`apk/드라이브테일_차곡차곡_release.apk`](apk/드라이브테일_차곡차곡_release.apk) (약 54MB)
 - release 빌드 (공모전 제출용으로 디버그 키 서명), ABI `arm64-v8a`(실차) · `x86_64`(에뮬레이터)
 - 실행 확인: Pleos Connect 에뮬레이터 v2.1.0 에서 설치 → 실행 → 데모 곡 생성·재생 (2026-11-06)
 
 ```bash
-adb install -r -g "apk/금호HT_오늘의OST_release.apk"
+adb install -r -g "apk/드라이브테일_차곡차곡_release.apk"
 ```
 
 `-g` 는 차량 권한(차속 등)을 설치할 때 한 번에 허용합니다. `-g` 없이 설치했다면 처음 실행할 때 차속 권한을 '허용'해 주세요.
-하단 독(앱 목록)에서 **오늘의 OST**(음표 아이콘)를 누르면 실행됩니다.
+하단 독(앱 목록)에서 **차곡차곡**(음표 아이콘)를 누르면 실행됩니다.
 release 빌드에는 디버그용 기능(adb SIM 명령, 소리 엔진 테스트 버튼)이 없습니다.
 
 ## 현재 상태
@@ -39,7 +41,7 @@ release 빌드에는 디버그용 기능(adb SIM 명령, 소리 엔진 테스트
 | 차속 수신 | ✅ AAOS `PERF_VEHICLE_SPEED` (ACCEL 을 누르면 0 → 72km/h 값이 들어옴) |
 | 기어 수신 | ✅ AAOS `GEAR_SELECTION` (P↔D) |
 | 깜빡이 수신 | ✅ Pleos `getTurnSignal()` (`pleos.car.permission.CAR_LIGHTS`), Blink left/right/Off |
-| 제한속도 | ⚠ NaviHelper 연결은 되지만 에뮬레이터는 항상 0 (붕붕멍과 같은 GPS 한계) → 과속 규칙은 데모 시나리오로 시연 |
+| 제한속도 | ⚠ NaviHelper 연결은 되지만 에뮬레이터는 항상 0 (붕붕냥과 같은 GPS 한계) → 과속 규칙은 데모 시나리오로 시연 |
 | 주행 규제 중 기록 | ✅ 기어 D 에서 `uxRestricted=true`, 앱 화면은 가려지고 Foreground Service 는 계속 1초 기록 |
 | 주행 중 백그라운드 재생 | ✅ 규제 중에도 MediaPlayer 가 `state:started` 로 계속 재생됨 → 실시간 재생을 확장 단계에서 검토할 수 있음 (1차는 주행 중 소리 없음 유지) |
 | 내비 안내와 겹칠 때 | ✅ 내비 안내(`USAGE_ASSISTANCE_NAVIGATION_GUIDANCE`, GAIN_TRANSIENT_MAY_DUCK)는 별도 출력(`bus1_navigation_out`)으로 동시에 나오고, 음악은 포커스를 잃지 않음. 에뮬레이터는 HAL 더킹을 쓰지 않아 음악 음량은 그대로 → **실차에서 더킹 확인 필요** |
@@ -48,10 +50,10 @@ release 빌드에는 디버그용 기능(adb SIM 명령, 소리 엔진 테스트
 디버그 빌드 확인용 명령 (Virtual Console 없이):
 
 ```bash
-adb shell am broadcast -a com.kumhoht.todaysost.SIM --es gear D --ef speed 60
-adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez navVoice true
-adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez playDemo true
-adb shell am broadcast -a com.kumhoht.todaysost.SIM --ez clear true
+adb shell am broadcast -a com.kumhoht.chagokchagok.SIM --es gear D --ef speed 60
+adb shell am broadcast -a com.kumhoht.chagokchagok.SIM --ez navVoice true
+adb shell am broadcast -a com.kumhoht.chagokchagok.SIM --ez playDemo true
+adb shell am broadcast -a com.kumhoht.chagokchagok.SIM --ez clear true
 adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 ```
 
@@ -136,7 +138,7 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 **소리 엔진 확인 (디버그 빌드)**: 설정 → 앱 정보의 '소리 엔진 테스트' 버튼, 또는
 
 ```bash
-adb shell am start -n com.kumhoht.todaysost/.ui.MainActivity --ez synthTest true
+adb shell am start -n com.kumhoht.chagokchagok/.ui.MainActivity --ez synthTest true
 adb logcat -s SynthSmoke OstSynth FluidSynth
 ```
 

@@ -30,7 +30,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.TodaysOST">
+        android:theme="@style/Theme.ChagokChagok">
 
         <!-- 메인 화면. distractionOptimized 를 선언하지 않는다:
              주행 중에는 플랫폼(CarUxRestrictions)이 앱 화면을 가리고, 주차하면 다시 보인다.

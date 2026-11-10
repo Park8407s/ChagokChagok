@@ -59,7 +59,7 @@ void apply(fluid_synth_t *s, const jint *e) {
 extern "C" {
 
 JNIEXPORT jlong JNICALL
-Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeCreate(JNIEnv *, jclass, jint sampleRate) {
+Java_com_kumhoht_chagokchagok_engine_synth_FluidSynthNative_nativeCreate(JNIEnv *, jclass, jint sampleRate) {
     for (int level = FLUID_PANIC; level <= FLUID_INFO; level++) fluid_set_log_function(level, fluidLog, nullptr);
 
     auto *e = new Engine();
@@ -83,7 +83,7 @@ Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeCreate(JNIEnv *, 
 
 /** @return 사운드폰트 ID (실패하면 -1) */
 JNIEXPORT jint JNICALL
-Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeLoadSoundFont(JNIEnv *env, jclass, jlong handle, jstring path) {
+Java_com_kumhoht_chagokchagok_engine_synth_FluidSynthNative_nativeLoadSoundFont(JNIEnv *env, jclass, jlong handle, jstring path) {
     const char *p = env->GetStringUTFChars(path, nullptr);
     // reset_presets=0: 채널 프리셋은 PROGRAM_SELECT 이벤트로 직접 고른다
     int id = fluid_synth_sfload(engine(handle)->synth, p, 0);
@@ -97,7 +97,7 @@ Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeLoadSoundFont(JNI
  * @return 인터리브 스테레오 float (L,R,L,R...), 길이 totalFrames*2
  */
 JNIEXPORT jfloatArray JNICALL
-Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeRender(JNIEnv *env, jclass, jlong handle,
+Java_com_kumhoht_chagokchagok_engine_synth_FluidSynthNative_nativeRender(JNIEnv *env, jclass, jlong handle,
                                                                       jintArray events, jint totalFrames) {
     fluid_synth_t *s = engine(handle)->synth;
     const jsize n = env->GetArrayLength(events) / kEventInts;
@@ -124,7 +124,7 @@ Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeRender(JNIEnv *en
 }
 
 JNIEXPORT void JNICALL
-Java_com_kumhoht_todaysost_engine_synth_FluidSynthNative_nativeDestroy(JNIEnv *, jclass, jlong handle) {
+Java_com_kumhoht_chagokchagok_engine_synth_FluidSynthNative_nativeDestroy(JNIEnv *, jclass, jlong handle) {
     Engine *e = engine(handle);
     if (!e) return;
     delete_fluid_synth(e->synth);
