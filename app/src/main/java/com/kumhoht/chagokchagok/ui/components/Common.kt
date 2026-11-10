@@ -53,8 +53,8 @@ val CardShape = RoundedCornerShape(26.dp)
 @get:DrawableRes
 val Genre.iconRes: Int
     get() = when (this) {
-        Genre.US_POP -> R.drawable.ic_genre_pop
-        Genre.POP_BALLAD -> R.drawable.ic_genre_ballad
+        Genre.POP -> R.drawable.ic_genre_pop
+        Genre.BALLAD -> R.drawable.ic_genre_ballad
         Genre.CHILDREN -> R.drawable.ic_genre_children
         Genre.TROT -> R.drawable.ic_genre_trot
         Genre.DANCE -> R.drawable.ic_genre_dance

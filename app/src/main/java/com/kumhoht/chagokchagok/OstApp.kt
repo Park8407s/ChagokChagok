@@ -37,7 +37,7 @@ class OstApp : Application() {
     fun setRecording(s: RecorderState) { _recording.value = s }
 
     var genre: Genre
-        get() = Genre.entries.firstOrNull { it.name == prefs.getString("genre", null) } ?: Genre.US_POP
+        get() = Genre.of(prefs.getString("genre", null)) ?: Genre.POP
         set(v) = prefs.edit().putString("genre", v.name).apply()
 
     var barMode: BarMode
@@ -49,7 +49,18 @@ class OstApp : Application() {
         db = OstDatabase.create(this)
         telemetry = Telemetry(this).also { it.start() }
         player = OstPlayer(this)
+        dropStaleDemoCache()
         if (BuildConfig.DEBUG) registerDebugSim()
+    }
+
+    /**
+     * 데모 샘플은 한 번 만들면 파일로 재사용한다. 마스터링·파일명 규칙이 바뀌면 [DEMO_CACHE_VERSION] 을 올려
+     * 예전 파일(예: demo_us_pop_*.wav, 끝 무음이 긴 파일)을 지우고 새로 만든다. 주행 기록 곡은 건드리지 않는다.
+     */
+    private fun dropStaleDemoCache() {
+        if (prefs.getInt("demoCacheVersion", 0) == DEMO_CACHE_VERSION) return
+        java.io.File(filesDir, "tracks").listFiles { f -> f.name.startsWith("demo_") }?.forEach { it.delete() }
+        prefs.edit().putInt("demoCacheVersion", DEMO_CACHE_VERSION).apply()
     }
 
     /**
@@ -84,6 +95,8 @@ class OstApp : Application() {
 
     companion object {
         fun of(c: Context) = c.applicationContext as OstApp
+        /** 3: 엔진 v3 마스터링(끝 무음 제거) + pop/ballad 파일명 + 하프·팀파니 FluidR3 배정 */
+        private const val DEMO_CACHE_VERSION = 3
     }
 }
 

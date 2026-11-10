@@ -43,13 +43,13 @@ object SampleData {
 
     private fun seconds(genre: Genre, bars: Int) = TrackRules.songSeconds(bars, genre).roundToInt()
 
-    fun smoothTrack(genre: Genre = Genre.US_POP) = TrackUi(
+    fun smoothTrack(genre: Genre = Genre.POP) = TrackUi(
         id = 101, number = 1, title = "11월 4일 출근길", genre = genre,
         distanceKm = 15.0, driveMinutes = 17, bars = 30, seconds = seconds(genre, 30),
         timeline = bars(smoothHeights, mapOf(8 to EventKind.TURN_RIGHT, 20 to EventKind.TURN_LEFT)),
         labels = labels,
         notes = listOf(
-            TrackNote(EventKind.HIGHWAY, "고속 구간에서 코러스와 스트링이 더해졌어요."),
+            TrackNote(EventKind.HIGHWAY, "고속 구간에서 코러스가 더해지며 곡이 가장 커졌어요."),
             TrackNote(EventKind.STOP, "신호 대기 2번은 피아노만 남는 쉬어가는 부분이 됐어요."),
             TrackNote(EventKind.TURN_RIGHT, "깜빡이 두 번이 반짝이는 소리로 들어갔어요."),
         ),
@@ -57,7 +57,7 @@ object SampleData {
         endingBody = "급가속·급제동 없이 도착해서\n곡이 깔끔하게 마무리됐어요.",
     )
 
-    fun roughTrack(genre: Genre = Genre.US_POP) = TrackUi(
+    fun roughTrack(genre: Genre = Genre.POP) = TrackUi(
         id = 102, number = 1, title = "11월 4일 출근길", genre = genre,
         distanceKm = 15.0, driveMinutes = 17, bars = 30, seconds = seconds(genre, 30),
         timeline = bars(
@@ -83,7 +83,7 @@ object SampleData {
 
     /** 홈의 '어제의 OST' (그림 2) */
     val yesterday = TrackUi(
-        id = 201, number = 2, title = "11월 3일 퇴근길", genre = Genre.POP_BALLAD,
+        id = 201, number = 2, title = "11월 3일 퇴근길", genre = Genre.BALLAD,
         distanceKm = 12.0, driveMinutes = 21, bars = 30, seconds = 100,
         timeline = emptyList(), labels = emptyList(), notes = emptyList(), endingTitle = "", endingBody = "",
     )
@@ -91,18 +91,18 @@ object SampleData {
 
     /** 내 OST 앨범 (그림 5) */
     val days = listOf(
-        DayAlbumUi("11월 4일", Genre.US_POP, listOf("출근길", "마트 가는 길", "퇴근길"), 1104, 6),
-        DayAlbumUi("11월 3일", Genre.POP_BALLAD, listOf("출근길", "퇴근길"), 1103, 0),
+        DayAlbumUi("11월 4일", Genre.POP, listOf("출근길", "마트 가는 길", "퇴근길"), 1104, 6),
+        DayAlbumUi("11월 3일", Genre.BALLAD, listOf("출근길", "퇴근길"), 1103, 0),
         DayAlbumUi("11월 2일", Genre.TROT, listOf("할머니 댁 가는 길", "돌아오는 길"), 1102, 0),
         DayAlbumUi("11월 1일", Genre.DANCE, listOf("출근길", "퇴근길", "야간 드라이브"), 1101, 7),
-        DayAlbumUi("10월 31일", Genre.US_POP, listOf("출근길", "퇴근길"), 1031, 0),
+        DayAlbumUi("10월 31일", Genre.POP, listOf("출근길", "퇴근길"), 1031, 0),
         DayAlbumUi("10월 30일", Genre.CHILDREN, listOf("키즈카페 가는 길", "돌아오는 길"), 1030, 0),
-        DayAlbumUi("10월 29일", Genre.POP_BALLAD, listOf("출근길"), 1029, 9),
-        DayAlbumUi("10월 28일", Genre.US_POP, listOf("출근길", "병원 가는 길", "퇴근길"), 1028, 0),
+        DayAlbumUi("10월 29일", Genre.BALLAD, listOf("출근길"), 1029, 9),
+        DayAlbumUi("10월 28일", Genre.POP, listOf("출근길", "병원 가는 길", "퇴근길"), 1028, 0),
     )
 
     val month = MonthSummaryUi(
-        month = 11, trackCount = 21, topGenre = Genre.US_POP, cleanTracks = 19,
+        month = 11, trackCount = 21, topGenre = Genre.POP, cleanTracks = 19,
         longestTitle = "할머니 댁 가는 길", longestSeconds = 370,
     )
 }

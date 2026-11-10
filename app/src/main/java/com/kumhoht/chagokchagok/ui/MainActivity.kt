@@ -64,18 +64,18 @@ import java.util.Calendar
  *
  * adb (디버그 빌드):
  *   adb shell am start -n com.kumhoht.chagokchagok/.ui.MainActivity --es screen DEMO
- *   adb shell am start -n com.kumhoht.chagokchagok/.ui.MainActivity --es make US_POP --es drive ROUGH
+ *   adb shell am start -n com.kumhoht.chagokchagok/.ui.MainActivity --es make POP --es drive ROUGH
  */
 class MainActivity : ComponentActivity() {
     private val app by lazy { OstApp.of(this) }
     private val player get() = app.player
 
     private var screen by mutableStateOf(Screen.HOME)
-    private var genre by mutableStateOf(Genre.US_POP)
+    private var genre by mutableStateOf(Genre.POP)
     private var barMode by mutableStateOf(BarMode.NORMAL)
     private var demoDrive by mutableStateOf(Drive.SMOOTH)
     private var demoSample by mutableStateOf<Pair<Genre, Drive>?>(null)
-    private var arrival by mutableStateOf(demoUi(Genre.US_POP, Drive.SMOOTH))
+    private var arrival by mutableStateOf(demoUi(Genre.POP, Drive.SMOOTH))
     private var arrivalFile by mutableStateOf<File?>(null)
     private var playingFile by mutableStateOf<File?>(null)
     private var progress by mutableFloatStateOf(0f)
@@ -173,10 +173,10 @@ class MainActivity : ComponentActivity() {
                     selected = genre, onSelect = { genre = it; app.genre = it },
                     yesterday = yesterday?.let(AlbumMapper::trackUi) ?: SampleData.yesterday,
                     yesterdayTrackCount = yesterday?.let { y -> saved.count { it.dayKey == y.dayKey } } ?: SampleData.yesterdayTrackCount,
-                    onReplay = { if (yesterday != null) toggle(File(yesterday.filePath)) else makeAndPlay(Genre.POP_BALLAD, Drive.SMOOTH) },
+                    onReplay = { if (yesterday != null) toggle(File(yesterday.filePath)) else makeAndPlay(Genre.BALLAD, Drive.SMOOTH) },
                     onOpenAlbum = { go(Screen.ALBUM) },
                     replayState = if (yesterday != null) stateOf(File(yesterday.filePath))
-                    else stateOf(demoFile(Genre.POP_BALLAD, Drive.SMOOTH), key(Genre.POP_BALLAD, Drive.SMOOTH)),
+                    else stateOf(demoFile(Genre.BALLAD, Drive.SMOOTH), key(Genre.BALLAD, Drive.SMOOTH)),
                 )
             }
             Screen.ARRIVAL -> ArrivalScreen(
@@ -326,7 +326,7 @@ class MainActivity : ComponentActivity() {
         val d = intent.getStringExtra("drive")?.let { name -> Drive.entries.firstOrNull { it.name == name } }
         if (d != null) { demoDrive = d; arrival = demoUi(genre, d); go(Screen.ARRIVAL) }
         intent.getStringExtra("make")?.let { name ->
-            Genre.entries.firstOrNull { it.name == name }?.let { g -> genre = g; makeArrival(g, d ?: Drive.SMOOTH) }
+            Genre.of(name)?.let { g -> genre = g; makeArrival(g, d ?: Drive.SMOOTH) }
         }
         if (intent.getBooleanExtra("synthTest", false)) { go(Screen.SETTINGS); runSynthTest() }
     }

@@ -36,8 +36,8 @@ object Ost {
 /** 장르별 표시 정보 (시안 기준) */
 val Genre.color: Color
     get() = when (this) {
-        Genre.US_POP -> Ost.Orange
-        Genre.POP_BALLAD -> Ost.Purple
+        Genre.POP -> Ost.Orange
+        Genre.BALLAD -> Ost.Purple
         Genre.CHILDREN -> Ost.Green
         Genre.TROT -> Ost.Pink
         Genre.DANCE -> Ost.Cyan
@@ -46,8 +46,8 @@ val Genre.color: Color
 /** 화면에 쓰는 짧은 이름 (팝·발라드·동요·트로트·댄스) */
 val Genre.shortName: String
     get() = when (this) {
-        Genre.US_POP -> "팝"
-        Genre.POP_BALLAD -> "발라드"
+        Genre.POP -> "팝"
+        Genre.BALLAD -> "발라드"
         Genre.CHILDREN -> "동요"
         Genre.TROT -> "트로트"
         Genre.DANCE -> "댄스"
@@ -55,8 +55,8 @@ val Genre.shortName: String
 
 val Genre.tagline: String
     get() = when (this) {
-        Genre.US_POP -> "밝고 리듬감 있게"
-        Genre.POP_BALLAD -> "잔잔하고 서정적으로"
+        Genre.POP -> "밝고 리듬감 있게"
+        Genre.BALLAD -> "잔잔하고 서정적으로"
         Genre.CHILDREN -> "아이와 함께"
         Genre.TROT -> "흥겹게 쿵짝"
         Genre.DANCE -> "신나게 쿵쿵"

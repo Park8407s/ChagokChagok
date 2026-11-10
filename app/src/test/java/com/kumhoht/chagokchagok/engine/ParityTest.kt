@@ -53,10 +53,10 @@ class ParityTest {
         return tok.joinToString(" ")
     }
 
-    @Test fun 미국팝_A() = check("v3_uspop_A", Composer.compose(Genre.US_POP, Scenarios.SMOOTH))
-    @Test fun 미국팝_B() = check("v3_uspop_B", Composer.compose(Genre.US_POP, Scenarios.ROUGH))
-    @Test fun 발라드_A() = check("v3_ballad_A", Composer.compose(Genre.POP_BALLAD, Scenarios.SMOOTH))
-    @Test fun 발라드_B() = check("v3_ballad_B", Composer.compose(Genre.POP_BALLAD, Scenarios.ROUGH))
+    @Test fun 팝_A() = check("v3_uspop_A", Composer.compose(Genre.POP, Scenarios.SMOOTH))
+    @Test fun 팝_B() = check("v3_uspop_B", Composer.compose(Genre.POP, Scenarios.ROUGH))
+    @Test fun 발라드_A() = check("v3_ballad_A", Composer.compose(Genre.BALLAD, Scenarios.SMOOTH))
+    @Test fun 발라드_B() = check("v3_ballad_B", Composer.compose(Genre.BALLAD, Scenarios.ROUGH))
     @Test fun 트로트_A() = check("v3_trot_A", Composer.compose(Genre.TROT, Scenarios.SMOOTH))
     @Test fun 트로트_B() = check("v3_trot_B", Composer.compose(Genre.TROT, Scenarios.ROUGH))
     @Test fun 댄스_A() = check("v3_dance_A", Composer.compose(Genre.DANCE, Scenarios.SMOOTH))
@@ -66,7 +66,7 @@ class ParityTest {
 
     @Test fun 주행기록_데모모드_곡() {
         val bars = DriveSession.segment(DriveSession.demoLog(), BarMode.DEMO).bars
-        check("v3_uspop_session_demo", Composer.compose(Genre.US_POP, bars))
+        check("v3_uspop_session_demo", Composer.compose(Genre.POP, bars))
         check("v3_trot_session_demo", Composer.compose(Genre.TROT, bars))
     }
 

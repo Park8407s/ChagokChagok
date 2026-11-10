@@ -8,7 +8,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * drive_music_v3.py build() 포팅 (미국 팝·발라드·트로트·댄스).
+ * drive_music_v3.py build() 포팅 (팝·발라드·트로트·댄스, 내부 키는 uspop 그대로).
  *
  * 같은 마디 목록을 넣으면 Python 과 똑같은 음(높이·세기·시작·끝)이 나와야 한다.
  * 그래서 계산 순서(부동소수점 덧셈·곱셈 순서)와 난수 호출 순서를 원본 그대로 옮겼다.
@@ -139,7 +139,7 @@ internal class ComposerV3(private val genre: String) {
                     if (stopped) {
                         for ((k, n) in (ch + (ch[1] + 12)).withIndex()) note("comp", n + 12, t + k * BEAT, BEAT * 2, 45)
                     } else {
-                        // 피아노 트레실로(3-3-2) 스탭 = 미국 팝 시그니처 리듬
+                        // 피아노 트레실로(3-3-2) 스탭 = 팝 시그니처 리듬
                         val stabs = if (E < 3) doubleArrayOf(0.0, 1.5, 3.0) else doubleArrayOf(0.0, .75, 1.5, 2.5, 3.0, 3.5)
                         for (s in stabs) if (within(s * BEAT)) for (n in ch) note("comp", n, t + s * BEAT, BEAT * .45, 62 + 4 * E)
                         if (E >= 2) for (k in 0 until 8) if (within(k * BEAT / 2)) note("gtr", ch[0] - 12, t + k * BEAT / 2, BEAT * .3, 58 + 8 * bi(k % 2 == 0))

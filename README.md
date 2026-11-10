@@ -70,11 +70,24 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 
 | 장르 | BPM |
 |---|---|
-| 미국 팝 | 128 |
-| 팝 발라드 | 72 |
+| 팝 | 128 |
+| 발라드 | 72 |
 | 동요 | 112 |
 | 트로트 | 134 |
 | 댄스 | 140 |
+
+곡 길이 = 마디 수 × 4박 × 60 ÷ BPM (17분 출근길 30마디: 팝 56초, 발라드 1분 40초).
+엔진 내부 장르 키는 예전 이름(`uspop`)이 남아 있지만 화면과 파일명은 `pop`(팝)·`ballad`(발라드)입니다.
+
+마스터링은 작곡 엔진 v3 `make_final.py`의 수치를 따릅니다 (`engine/synth/Mastering.kt`).
+
+| 단계 | 값 |
+|---|---|
+| 에코 | 60ms, 0.12 |
+| 압축 | -18dB 이상 3:1, 어택 10ms·릴리즈 150ms |
+| 음량 맞춤 | -14 LUFS (ITU-R BS.1770) |
+| 리미터 | 최대 -1.5 dBFS |
+| 끝 무음 제거 | 곡 끝 1.2초 전부터 1.5초 페이드아웃, 곡 끝 + 0.3초에서 자름 |
 
 ## 사용 방법
 
@@ -173,12 +186,12 @@ tools/parity/        원본 Python 엔진 악보 추출 (ParityTest 기준 데�
 ## 사운드폰트
 
 SF3 형식(샘플을 Ogg Vorbis로 압축한 사운드폰트)을 씁니다. FluidSynth 안드로이드 빌드가 직접 읽습니다.
-원본 SF2 두 개를 그대로 쓰면 66MB인데, 압축 후 **15MB**입니다.
+원본 SF2 두 개를 그대로 쓰면 66MB인데, 압축 후 **16MB**입니다.
 
 | 파일 | 악기 | 크기 | 만든 방법 |
 |---|---|---|---|
 | `GeneralUser-GS.sf3` | 피아노·기타·베이스·드럼·신스·오르간·색소폰·리코더·오르골 | 8.7MB | [GeneralUser GS v2.0.3](https://github.com/mrbumpy409/GeneralUser-GS) 전체를 SF3로 압축 (원본 31MB) |
-| `FluidR3_GM_ensemble.sf3` | 스트링·코러스·브라스 (GM 40~45, 48~54, 56~63) | 6.7MB | FluidR3_GM(원본 141MB)에서 위 프리셋만 뽑아 SF3로 압축 |
+| `FluidR3_GM_ensemble.sf3` | 스트링·하프·팀파니·코러스·브라스 (GM 40~54, 56~63, 엔진 v3와 같은 배정) | 7.1MB | FluidR3_GM(원본 141MB)에서 위 프리셋만 뽑아 SF3로 압축 |
 
 - 악기와 프리셋 파라미터는 바꾸지 않고, 샘플만 Vorbis 품질 6(높은 편)으로 압축합니다.
 - 도구가 변환 후 모든 샘플을 다시 풀어서 원본 길이와 루프 끝이 복원되는지 검사합니다.
@@ -193,7 +206,7 @@ SF3 형식(샘플을 Ogg Vorbis로 압축한 사운드폰트)을 씁니다. Flui
 
 ```bash
 ./gradlew :tools:sf2subset:run --args="list <FluidR3_GM.sf2 경로>"
-./gradlew :tools:sf2subset:run --args="sf3 <FluidR3_GM.sf2 경로> app/src/main/assets/soundfonts/FluidR3_GM_ensemble.sf3 --presets 0:40-45,0:48-54,0:56-63 --ffmpeg <ffmpeg.exe 경로>"
+./gradlew :tools:sf2subset:run --args="sf3 <FluidR3_GM.sf2 경로> app/src/main/assets/soundfonts/FluidR3_GM_ensemble.sf3 --presets 0:40-54,0:56-63 --ffmpeg <ffmpeg.exe 경로>"
 ./gradlew :tools:sf2subset:run --args="sf3 <GeneralUser-GS.sf2 경로> app/src/main/assets/soundfonts/GeneralUser-GS.sf3 --ffmpeg <ffmpeg.exe 경로>"
 ```
 

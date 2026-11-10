@@ -24,7 +24,7 @@ private fun r(vararg pairs: Pair<Number, Number>): Rhythm = pairs.map { it.first
 private fun ch(vararg c: Pair<String, Pair<List<Int>, Int>>) = linkedMapOf(*c)
 private fun inst(vararg c: Pair<String, Int>) = linkedMapOf(*c)
 
-/** drive_music_v3.py GENRES (미국 팝·발라드·트로트·댄스) */
+/** drive_music_v3.py GENRES (팝·발라드·트로트·댄스, 내부 키는 uspop 그대로) */
 internal val V3_GENRES: Map<String, GenreSpec> = mapOf(
     "uspop" to GenreSpec(
         bpm = 128, scale = listOf(0, 2, 4, 5, 7, 9, 11), melRange = 67 to 86,

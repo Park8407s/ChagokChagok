@@ -5,13 +5,22 @@ package com.kumhoht.chagokchagok.core.model
  * 마디 분할의 정확한 계산(정차 처리, 반올림 등)은 M2 에서 원본 drive_session.py 를 포팅하며 맞춘다.
  */
 
-/** 장르 5종과 BPM */
+/** 장르 5종과 BPM. 이름은 '팝'·'발라드'로 확정 (노션 2026-11-10, '미국 팝'·'팝 발라드'는 쓰지 않음) */
 enum class Genre(val label: String, val bpm: Int) {
-    US_POP("미국 팝", 128),
-    POP_BALLAD("팝 발라드", 72),
+    POP("팝", 128),
+    BALLAD("발라드", 72),
     CHILDREN("동요", 112),
     TROT("트로트", 134),
-    DANCE("댄스", 140),
+    DANCE("댄스", 140);
+
+    companion object {
+        /** 저장된 이름 → 장르. 예전 이름(US_POP, POP_BALLAD)으로 저장된 기록도 읽는다 */
+        fun of(name: String?): Genre? = when (name) {
+            "US_POP" -> POP
+            "POP_BALLAD" -> BALLAD
+            else -> entries.firstOrNull { it.name == name }
+        }
+    }
 }
 
 /** 마디 모드: 주행 시간 몇 초가 1마디가 되는지 */

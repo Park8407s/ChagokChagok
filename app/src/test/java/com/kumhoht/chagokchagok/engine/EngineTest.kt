@@ -35,7 +35,7 @@ class EngineTest {
         val r = DriveSession.segment(drive(17), BarMode.NORMAL)
         // 주행 1020초 + 도착 시점 1초 → 26마디 (25.5 마디 중 자투리 20초 이상은 한 마디) + 인트로·아웃트로 4
         assertEquals(30, r.bars.size)
-        assertEquals(56.25, TrackRules.songSeconds(r.bars.size, Genre.US_POP), 1e-9)
+        assertEquals(56.25, TrackRules.songSeconds(r.bars.size, Genre.POP), 1e-9)
     }
 
     @Test

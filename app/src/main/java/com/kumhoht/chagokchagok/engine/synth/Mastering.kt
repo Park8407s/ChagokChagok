@@ -13,16 +13,20 @@ import kotlin.math.tan
 /**
  * 마스터링 (인터리브 스테레오 float, 제자리 처리).
  *
- * 원본 후처리(ffmpeg)를 따르고, 기획서의 '컴프레서와 리미터'를 더했다:
- *   1. 에코      aecho=0.8:0.6:60:0.12  (원본 그대로)
- *   2. 컴프레서  -18dBFS 넘는 부분을 2:1 로 살짝 눌러 악기 사이 음량 차이를 줄임
- *   3. 음량 맞춤 통합 라우드니스 -14 LUFS (원본 loudnorm I=-14, ITU-R BS.1770 K-가중·게이팅)
- *   4. 리미터    최대 -1.5 dBFS (원본 TP=-1.5)
- *   5. 페이드아웃 곡 끝 2초 전부터 4초 (원본 afade)
+ * 작곡 엔진 v3 make_final.py render() 의 ffmpeg 후처리를 따른다:
+ *   1. 에코      aecho=0.8:0.6:60:0.12
+ *   2. 컴프레서  acompressor threshold=-18dB ratio=3 attack=10ms release=150ms
+ *   3. 음량 맞춤 통합 라우드니스 -14 LUFS (loudnorm I=-14, ITU-R BS.1770 K-가중·게이팅)
+ *   4. 리미터    최대 -1.5 dBFS (loudnorm TP=-1.5. 뒤의 alimiter 0.89 ≈ -1.0dBFS 보다 낮아 함께 만족)
+ *   5. 끝 무음 제거: 곡 끝 1.2초 전부터 1.5초 페이드아웃, 곡 끝 + 0.3초에서 자름 ([END_PAD_SEC])
  */
 object Mastering {
     const val TARGET_LUFS = -14.0
     const val CEILING_DB = -1.5
+    /** 곡 끝(마지막 마디 끝) 뒤로 남기는 길이. 렌더도 여기까지만 한다 */
+    const val END_PAD_SEC = 0.3
+    const val FADE_BEFORE_END_SEC = 1.2
+    const val FADE_SEC = 1.5
 
     data class Report(val inputLufs: Double, val outputLufs: Double, val peakDb: Double)
 
@@ -32,7 +36,7 @@ object Mastering {
         val before = integratedLoudness(x, sampleRate)
         if (before.isFinite()) gain(x, 10.0.pow((TARGET_LUFS - before) / 20))
         limit(x, sampleRate, 10.0.pow(CEILING_DB / 20).toFloat())
-        fadeOut(x, sampleRate, songSeconds - 2.0, 4.0)
+        fadeOut(x, sampleRate, songSeconds - FADE_BEFORE_END_SEC, FADE_SEC)
         val peak = x.maxOf { abs(it) }.toDouble()
         return Report(before, integratedLoudness(x, sampleRate), 20 * log10(max(peak, 1e-9)))
     }
@@ -47,8 +51,8 @@ object Mastering {
         }
     }
 
-    /** 부드러운 컴프레서 (두 채널 공통 게인, RMS 검출) */
-    private fun compress(x: FloatArray, sr: Int, thresholdDb: Double = -18.0, ratio: Double = 2.0) {
+    /** 컴프레서 (두 채널 공통 게인, RMS 검출, 어택 10ms·릴리즈 150ms) */
+    private fun compress(x: FloatArray, sr: Int, thresholdDb: Double = -18.0, ratio: Double = 3.0) {
         val att = exp(-1.0 / (0.010 * sr))
         val rel = exp(-1.0 / (0.150 * sr))
         var env = 0.0

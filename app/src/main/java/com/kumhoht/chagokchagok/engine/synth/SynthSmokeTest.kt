@@ -44,7 +44,7 @@ object SynthSmokeTest {
         events += SynthEvent.Program(0, 4, SoundFont.FLUID_ENSEMBLE, 0, 52)  // Ahh Choir
         events += SynthEvent.Program(0, 9, SoundFont.GENERAL_USER, 128, 0)   // Standard Drum Kit
 
-        val beat = 60.0 / 128 // 미국 팝 128 BPM
+        val beat = 60.0 / 128 // 팝 128 BPM
         // 피아노 아르페지오 (0~2초)
         listOf(60, 64, 67, 72, 67, 64, 60, 64).forEachIndexed { i, k -> note(0, k, 100, i * beat / 2, beat / 2) }
         // 스트링 화음 (2~4초)

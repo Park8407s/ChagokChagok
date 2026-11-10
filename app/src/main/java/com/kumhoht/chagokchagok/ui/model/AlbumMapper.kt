@@ -8,7 +8,7 @@ import com.kumhoht.chagokchagok.engine.session.BarEvent
 /** 저장된 트랙(Room) → 화면 데이터 */
 object AlbumMapper {
 
-    fun genreOf(t: TrackEntity) = Genre.entries.firstOrNull { it.name == t.genre } ?: Genre.US_POP
+    fun genreOf(t: TrackEntity) = Genre.of(t.genre) ?: Genre.POP
 
     fun trackUi(t: TrackEntity): TrackUi = TrackUiFactory.from(
         id = t.id, number = t.numberInDay, title = t.title, genre = genreOf(t), bars = BarCodec.decode(t.bars),

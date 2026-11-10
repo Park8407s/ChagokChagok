@@ -7,13 +7,13 @@ import kotlin.math.roundToInt
  * 악보 → FluidSynth 이벤트.
  * - 원본은 pretty_midi 로 MIDI 파일을 써서 fluidsynth 로 렌더했다. 여기서는 같은 내용을 이벤트로 바로 넘긴다.
  * - 채널: 악기마다 1개 (9번은 드럼 전용, pretty_midi 와 같은 규칙)
- * - 사운드폰트: 스트링·코러스·브라스(GM 40~45, 48~54, 56~63)는 FluidR3 추출본, 나머지와 드럼은 GeneralUser GS
+ * - 사운드폰트: 스트링·하프·팀파니·코러스·브라스(GM 40~54, 56~63)는 FluidR3 추출본, 나머지와 드럼은 GeneralUser GS
  */
 object ScoreRenderer {
-    /** 렌더 끝에 붙이는 여유 (잔향·페이드 아웃). 원본 ffmpeg 페이드가 곡 끝 2초 전부터 4초 */
-    const val TAIL_SEC = 2.0
+    /** 곡 끝 뒤로 렌더하는 길이 = 끝 무음 제거 후 남는 길이 (v3 make_final.py: atrim end = 곡 끝 + 0.3초) */
+    const val TAIL_SEC = Mastering.END_PAD_SEC
 
-    private val ENSEMBLE = (40..45) + (48..54) + (56..63)
+    private val ENSEMBLE = (40..54) + (56..63) // 엔진 v3 make_final.py FR3_PROGRAMS 와 같음 (하프 46·팀파니 47 포함)
 
     fun fontFor(program: Int) = if (program in ENSEMBLE) SoundFont.FLUID_ENSEMBLE else SoundFont.GENERAL_USER
 

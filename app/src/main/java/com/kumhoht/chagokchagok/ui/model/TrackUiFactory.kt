@@ -54,7 +54,7 @@ object TrackUiFactory {
 
         val notes = buildList {
             if (good) {
-                if (highway) add(TrackNote(EventKind.HIGHWAY, "고속 구간에서 ${highwayVoice(genre)} 더해졌어요."))
+                if (highway) add(TrackNote(EventKind.HIGHWAY, "고속 구간에서 ${highwayVoice(genre)} 더해지며 곡이 가장 커졌어요."))
                 if (stops > 0) add(TrackNote(EventKind.STOP, "신호 대기 ${stops}번은 ${restVoice(genre)}만 남는 쉬어가는 부분이 됐어요."))
                 if (turns > 0) add(TrackNote(EventKind.TURN_RIGHT, "깜빡이 ${turns}번이 반짝이는 소리로 들어갔어요."))
             } else {
@@ -83,8 +83,8 @@ object TrackUiFactory {
 
     /** 속도 90 이상(에너지 4)에서 더해지는 악기 (drive_music_v3 / v2 kids) */
     private fun highwayVoice(g: Genre) = when (g) {
-        Genre.US_POP -> "코러스와 크래시가"
-        Genre.POP_BALLAD -> "첼로와 스트링이"
+        Genre.POP -> "코러스가" // 팝은 고속 구간에서 코러스만 더해짐 (스트링 없음, 피그마 8-1)
+        Genre.BALLAD -> "첼로와 스트링이"
         Genre.TROT -> "트럼펫이"
         Genre.DANCE -> "하이햇과 신스 리드가"
         Genre.CHILDREN -> "실로폰이"
@@ -92,7 +92,7 @@ object TrackUiFactory {
 
     /** 정차 마디에서 남는 악기 */
     private fun restVoice(g: Genre) = when (g) {
-        Genre.US_POP, Genre.POP_BALLAD -> "피아노"
+        Genre.POP, Genre.BALLAD -> "피아노"
         Genre.TROT -> "오르간"
         Genre.DANCE -> "신스 패드"
         Genre.CHILDREN -> "오르골"

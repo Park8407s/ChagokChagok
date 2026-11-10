@@ -7,8 +7,8 @@ import com.kumhoht.chagokchagok.engine.session.BarEvent
 /** 작곡 엔진 입구: 마디 목록 + 장르 → 악보 */
 object Composer {
     fun compose(genre: Genre, bars: List<Bar>): Score = when (genre) {
-        Genre.US_POP -> ComposerV3("uspop").build(bars)
-        Genre.POP_BALLAD -> ComposerV3("ballad").build(bars)
+        Genre.POP -> ComposerV3("uspop").build(bars)
+        Genre.BALLAD -> ComposerV3("ballad").build(bars)
         Genre.TROT -> ComposerV3("trot").build(bars)
         Genre.DANCE -> ComposerV3("dance").build(bars)
         Genre.CHILDREN -> KidsComposerV2.build(bars)
