@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private var arrival by mutableStateOf(demoUi(Genre.POP, Drive.SMOOTH))
     private var arrivalFile by mutableStateOf<File?>(null)
     private var playingFile by mutableStateOf<File?>(null)
+    private var pausedFile by mutableStateOf<File?>(null)
     private var progress by mutableFloatStateOf(0f)
     private var tracks by mutableStateOf<List<TrackEntity>>(emptyList())
     private var synthStatus by mutableStateOf<String?>(null)
@@ -120,6 +121,7 @@ class MainActivity : ComponentActivity() {
             while (isActive) {
                 progress = player.progress
                 playingFile = player.current
+                pausedFile = player.pausedFile
                 delay(200)
             }
         }
@@ -177,13 +179,13 @@ class MainActivity : ComponentActivity() {
                     onReplay = { if (yesterday != null) toggle(File(yesterday.filePath)) else playSample(Genre.BALLAD, Drive.SMOOTH) },
                     onOpenAlbum = { go(Screen.ALBUM) },
                     replayState = stateOf(if (yesterday != null) File(yesterday.filePath) else sampleFile(Genre.BALLAD, Drive.SMOOTH)),
-                    onOpenDemo = { go(Screen.DEMO) },
+                    onOpenDemo = if (BuildConfig.DEMO_ENABLED) ({ go(Screen.DEMO) }) else null,
                 )
             }
             Screen.ARRIVAL -> ArrivalScreen(
                 track = arrival,
                 progress = if (playingFile != null && playingFile == arrivalFile) progress else 0f,
-                showDemoEntry = true,
+                showDemoEntry = BuildConfig.DEMO_ENABLED,
                 playing = playingFile != null && playingFile == arrivalFile,
                 onPlay = ::toggleArrival, onShare = ::shareArrival, onOpenDemo = { go(Screen.DEMO) },
             )
@@ -202,8 +204,10 @@ class MainActivity : ComponentActivity() {
                 smooth = demoUi(genre, Drive.SMOOTH), rough = demoUi(genre, Drive.ROUGH),
                 drive = demoDrive, onDrive = { demoDrive = it },
                 sample = demoSample,
-                onSample = { g, d -> demoSample = g to d; playSample(g, d) },
-                onMakeNow = { makeArrival(demoSample?.first ?: genre, demoDrive) },
+                // 재생하는 트랙의 주행(A/B)에 맞춰 위쪽 카드 선택도 바뀐다 (8-2 동작 정의 2)
+                onSample = { g, d -> demoSample = g to d; demoDrive = d; playSample(g, d) },
+                // 선택된 주행 × 마지막으로 재생한 장르, 아직 재생한 적이 없으면 팝 (8-2 동작 정의 3)
+                onMakeNow = { makeArrival(demoSample?.first ?: Genre.POP, demoDrive) },
                 sampleState = { g, d -> stateOf(sampleFile(g, d)) },
             )
             Screen.SETTINGS -> SettingsScreen(
@@ -271,7 +275,7 @@ class MainActivity : ComponentActivity() {
     private fun demoUi(g: Genre, d: Drive): TrackUi = TrackUiFactory.from(
         id = 1000L + g.ordinal * 10 + d.ordinal, number = 1, title = "11월 4일 출근길", genre = g,
         bars = bars(d), seconds = TrackRules.songSeconds(30, g), distanceKm = 15.0, driveMinutes = 17,
-    )
+    ).copy(isSample = true)
 
     /**
      * 출품용 샘플 10곡 (5장르 × A 부드러운 / B 급한 운전). 작곡 엔진 v3 make_final.py 로 만든 최종 음원을
@@ -301,7 +305,9 @@ class MainActivity : ComponentActivity() {
 
     private fun playSample(g: Genre, d: Drive) {
         val target = sampleFile(g, d)
-        if (playingFile == target) { player.stop(); return }
+        // 재생 중이면 일시정지, 일시정지한 곡이면 이어서 (8-2 동작 정의 2)
+        if (playingFile == target) { player.pause(); return }
+        if (pausedFile == target) { player.resume(); return }
         lifecycleScope.launch {
             try {
                 player.play(ensureSample(g, d))
@@ -372,9 +378,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** 이 곡 파일 버튼의 상태 (재생 중 / 만드는 중 / 멈춤) */
+    /** 이 곡 파일 버튼의 상태 (재생 중 / 일시정지 / 만드는 중 / 멈춤) */
     private fun stateOf(file: File?, makeKey: String? = null): PlayState = when {
         file != null && playingFile == file -> PlayState.PLAYING
+        file != null && pausedFile == file -> PlayState.PAUSED
         makeKey != null && makingKey == makeKey -> PlayState.LOADING
         else -> PlayState.IDLE
     }
@@ -391,7 +398,10 @@ class MainActivity : ComponentActivity() {
         val t = tracks.firstOrNull { it.filePath == f.absolutePath }?.let(AlbumMapper::trackUi)
             ?: arrival.takeIf { f == arrivalFile }
         if (t == null) player.play(f, onDone = onDone)
-        else player.play(f, "${t.numberText} ${t.title}", "오늘의 OST · ${t.genre.label} · ${formatDuration(t.seconds)}", onDone)
+        else player.play(
+            f, "${if (t.isSample) "샘플" else t.numberText} ${t.title}",
+            "${if (t.isSample) "가상 주행 샘플" else "오늘의 OST"} · ${t.genre.label} · ${formatDuration(t.seconds)}", onDone,
+        )
     }
 
     private fun dismissShortDrive() {

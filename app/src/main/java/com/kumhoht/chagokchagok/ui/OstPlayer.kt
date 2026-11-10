@@ -76,7 +76,9 @@ class OstPlayer(private val context: Context) {
     /** 지금 재생 중인 파일 (일시정지 중이면 null → 화면 버튼은 '멈춤' 상태) */
     @Volatile var current: File? = null
         private set
-    private var pausedFile: File? = null
+    /** 일시정지한 파일 (이어서 재생할 수 있음) */
+    @Volatile var pausedFile: File? = null
+        private set
 
     /**
      * @param title 미디어 위젯에 보일 곡 제목 (없으면 파일 이름으로 만든다)
@@ -116,8 +118,8 @@ class OstPlayer(private val context: Context) {
 
     fun stop() = onMain { stopNow() }
 
-    /** 위젯·핸들의 일시정지 */
-    private fun pause() = onMain {
+    /** 일시정지 (화면 버튼·위젯·핸들) */
+    fun pause() = onMain {
         val mp = player ?: return@onMain
         if (!mp.isPlaying) return@onMain
         mp.pause()
@@ -126,8 +128,8 @@ class OstPlayer(private val context: Context) {
         session.setPlaybackState(state(PlaybackState.STATE_PAUSED))
     }
 
-    /** 위젯·핸들의 재생 (일시정지한 곳부터) */
-    private fun resume() = onMain {
+    /** 일시정지한 곳부터 이어서 재생 (화면 버튼·위젯·핸들) */
+    fun resume() = onMain {
         val mp = player ?: return@onMain
         val f = pausedFile ?: return@onMain
         if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) return@onMain

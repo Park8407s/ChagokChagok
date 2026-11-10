@@ -79,6 +79,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // 심사용 데모(가상 주행 샘플) 켜기. 출품 빌드는 true, 서비스용으로 빌드할 때 false 로 바꾸면
+        // 홈·도착 화면의 데모 입구와 상단 '데모' 버튼이 사라진다 (8-2 표시 조건)
+        buildConfigField("boolean", "DEMO_ENABLED", "true")
+
         ndk { abiFilters += targetAbis }
         externalNativeBuild {
             cmake {

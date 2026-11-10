@@ -53,6 +53,8 @@ data class TrackUi(
     val hardAccel: Int = 0,
     val hardBrake: Int = 0,
     val speedingSections: Int = 0,
+    /** 가상 주행으로 만든 샘플 트랙 (내 앨범에 넣지 않음, 도착 화면에 '샘플'로 표시) */
+    val isSample: Boolean = false,
 ) {
     val numberText get() = "Track %02d".format(number)
     /** 앨범 커버의 노란 점 개수 = 거친 운전 사건 수 */
@@ -79,7 +81,7 @@ data class MonthSummaryUi(
 )
 
 /** 재생 버튼 상태: 멈춤 / 곡 만드는 중 / 재생 중 (소리가 안 들려도 버튼만 보고 알 수 있게) */
-enum class PlayState { IDLE, LOADING, PLAYING }
+enum class PlayState { IDLE, LOADING, PLAYING, PAUSED }
 
 /** 1분 40초 / 56초 */
 fun formatDuration(seconds: Int): String {

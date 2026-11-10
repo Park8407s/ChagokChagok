@@ -143,7 +143,7 @@ private fun SampleButton(label: String, duration: String, accent: Color, selecte
     Row(
         Modifier.fillMaxWidth().height(71.dp).clip(shape)
             .background(if (playing) accent else Color.Transparent)
-            .border(2.dp, if (playing || selected) accent else Ost.Line, shape)
+            .border(2.dp, if (playing || selected || state == PlayState.PAUSED) accent else Ost.Line, shape)
             .clickable(onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -152,7 +152,7 @@ private fun SampleButton(label: String, duration: String, accent: Color, selecte
         Spacer(Modifier.size(11.dp))
         Text(label, style = OstType.Label.copy(color = fg, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
         Text(
-            when (state) { PlayState.PLAYING -> "재생 중"; PlayState.LOADING -> "만드는 중…"; else -> duration },
+            when (state) { PlayState.PLAYING -> "재생 중"; PlayState.PAUSED -> "일시정지"; PlayState.LOADING -> "만드는 중…"; else -> duration },
             style = OstType.Tiny.copy(color = if (playing) Ost.Bg else Ost.TextSub, fontWeight = if (playing) FontWeight.Bold else FontWeight.Normal),
         )
     }

@@ -170,7 +170,9 @@ fun OstStatusBar(
             val items = buildList {
                 add(Screen.HOME)
                 if (showArrival) add(Screen.ARRIVAL)
-                add(Screen.ALBUM); add(Screen.DEMO); add(Screen.SETTINGS)
+                add(Screen.ALBUM)
+                if (com.kumhoht.chagokchagok.BuildConfig.DEMO_ENABLED) add(Screen.DEMO) // 출품 빌드 전용
+                add(Screen.SETTINGS)
             }
             items.forEach { s ->
                 val on = s == current

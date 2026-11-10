@@ -85,11 +85,16 @@ fun ArrivalScreen(
 
         // 오른쪽: 곡 정보와 해설
         Column(Modifier.weight(1f)) {
-            Text("도착했어요. 오늘의 OST ${ordinal(track.number)} 트랙이 완성됐어요.", style = OstType.BodySmall.copy(color = Ost.TextSub))
+            // 가상 주행으로 만든 곡은 '샘플'로 표시하고 내 앨범에 넣지 않는다 (8-2 동작 정의 3, 마스터 기능 ⑥)
+            Text(
+                if (track.isSample) "가상 주행으로 만든 샘플 트랙이에요. 내 앨범에는 들어가지 않아요."
+                else "도착했어요. 오늘의 OST ${ordinal(track.number)} 트랙이 완성됐어요.",
+                style = OstType.BodySmall.copy(color = if (track.isSample) Ost.Yellow else Ost.TextSub),
+            )
             Spacer(Modifier.height(10.dp))
             Text(
                 buildAnnotatedString {
-                    withStyle(OstType.Display.copy(color = Ost.Yellow).toSpanStyle()) { append(track.numberText) }
+                    withStyle(OstType.Display.copy(color = Ost.Yellow).toSpanStyle()) { append(if (track.isSample) "샘플" else track.numberText) }
                     append(" ")
                     append(track.title)
                 },
