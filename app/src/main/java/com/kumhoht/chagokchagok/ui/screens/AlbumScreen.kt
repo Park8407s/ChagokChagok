@@ -43,7 +43,14 @@ import com.kumhoht.chagokchagok.ui.theme.shortName
 
 /** 그림 5. 내 OST 앨범 화면 ('차곡차곡') */
 @Composable
-fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -> Unit, onOpenTrack: (Long) -> Unit = {}) {
+fun AlbumScreen(
+    days: List<DayAlbumUi>,
+    month: MonthSummaryUi,
+    onPlayMonth: () -> Unit,
+    onOpenTrack: (Long) -> Unit = {},
+    /** 월간 OST 이어 듣기 중이면 (지금 곡 번호, 전체 곡 수) */
+    monthPlaying: Pair<Int, Int>? = null,
+) {
     var byTrack by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Row(Modifier.fillMaxWidth()) {
@@ -55,7 +62,10 @@ fun AlbumScreen(days: List<DayAlbumUi>, month: MonthSummaryUi, onPlayMonth: () -
             Row(Modifier.padding(top = 41.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Tab("날짜별", !byTrack) { byTrack = false }
                 Tab("트랙별", byTrack) { byTrack = true }
-                PrimaryButton("${month.month}월의 OST 듣기", onPlayMonth, icon = null)
+                PrimaryButton(
+                    monthPlaying?.let { (n, total) -> "멈추기 · $n / $total" } ?: "${month.month}월의 OST 듣기",
+                    onPlayMonth, icon = null,
+                )
             }
         }
         Spacer(Modifier.height(37.dp))

@@ -102,7 +102,11 @@ class DriveService : Service() {
             )
             Log.i(TAG, "트랙 #$id 저장: ${trip.seconds}초 운행 → ${bars.size}마디 → %.1f초 ($genre, $mode)".format(made.seconds))
             // 도착하면 들려준다 (주차 상태라 소리 가능)
-            app.player.play(File(made.file.absolutePath))
+            app.player.play(
+                File(made.file.absolutePath),
+                title = "Track %02d %s".format(number, title(trip.startedAt)),
+                subtitle = "오늘의 OST · ${genre.label} · %d분 %02d초".format(made.seconds.toInt() / 60, made.seconds.toInt() % 60),
+            )
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra(MainActivity.EXTRA_TRACK, id))
         } catch (t: Throwable) {
             Log.e(TAG, "곡 만들기 실패", t)

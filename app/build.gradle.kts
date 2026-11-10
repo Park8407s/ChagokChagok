@@ -97,7 +97,7 @@ android {
 
     // SF3 는 이미 압축된 파일이라 APK 안에서 다시 압축하지 않는다 (assets.openFd 로 크기를 읽기 위해서도 필요)
     androidResources {
-        noCompress += "sf3"
+        noCompress += listOf("sf3", "mp3")
     }
 
     sourceSets {

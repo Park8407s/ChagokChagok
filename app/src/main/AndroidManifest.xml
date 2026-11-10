@@ -21,6 +21,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- 곡 공유: 오디오 파일을 받을 수 있는 앱이 있는지 확인 (없으면 빈 공유 창 대신 안내) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="audio/*" />
+        </intent>
+    </queries>
+
     <application
         android:name=".OstApp"
         android:allowBackup="true"
@@ -55,6 +63,31 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="vehicle_drive_log_for_music_generation" />
         </service>
+
+        <!-- 차량 미디어 위젯·미디어 센터 연동 (지금 곡 제목, 위젯·핸들 버튼으로 재생/일시정지/다음 곡) -->
+        <service
+            android:name=".OstMediaService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+            <!-- 자체 화면이 있는 앱도 미디어 소스로 써 달라는 선언 (없으면 차량 MediaSourceUtil 이
+                 "non media template app" 으로 보고 위젯에서 뺀다). 앱 아이콘을 누르면 앱 화면이 열린다. -->
+            <meta-data
+                android:name="androidx.car.app.launchable"
+                android:value="true" />
+        </service>
+
+        <!-- 곡 공유: 앱 저장소의 곡 파일을 다른 앱에 읽기 권한과 함께 넘긴다 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
 
         <!-- 차량 시동(부팅) 시 기록 서비스 시작 -->
         <receiver

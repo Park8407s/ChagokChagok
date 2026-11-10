@@ -59,7 +59,8 @@ private class LicenseItem(
 private val LICENSES = listOf(
     LicenseItem(
         "FluidSynth", "LGPL-2.1", "신디사이저 · 악보를 악기 소리로 연주 · ", "Peter Hanappe 외 기여자",
-        "수정 없이 동적 링크(.so)로 사용 · 소스 코드 github.com/FluidSynth/fluidsynth", null,
+        "수정 없이 동적 링크(.so) · libsndfile(LGPL-2.1)·Oboe(Apache-2.0)·libogg·libvorbis·FLAC·Opus(BSD) 전문 포함",
+        "licenses/FluidSynth_and_libraries.txt",
     ),
     LicenseItem(
         "GeneralUser GS", "GeneralUser GS License v2.0", "기본 악기 소리 (사운드폰트) · ", "© S. Christian Collins",

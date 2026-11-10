@@ -18,6 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,7 @@ import com.kumhoht.chagokchagok.ui.components.CardShape
 import com.kumhoht.chagokchagok.ui.components.OstIcon
 import com.kumhoht.chagokchagok.ui.components.OutlineButton
 import com.kumhoht.chagokchagok.ui.components.card
+import com.kumhoht.chagokchagok.ui.components.dashedBorder
 import com.kumhoht.chagokchagok.ui.components.iconRes
 import com.kumhoht.chagokchagok.ui.model.PlayState
 import com.kumhoht.chagokchagok.ui.model.TrackUi
@@ -48,6 +52,8 @@ fun HomeScreen(
     onReplay: () -> Unit,
     onOpenAlbum: () -> Unit,
     replayState: PlayState = PlayState.IDLE,
+    /** 심사용 데모 입구 (출품 빌드 전용, null 이면 숨김) */
+    onOpenDemo: (() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxSize().padding(start = 64.dp, end = 64.dp, top = 6.dp)) {
         Text("오늘은 어떤 곡으로 달릴까요?", style = OstType.Display)
@@ -116,6 +122,24 @@ fun HomeScreen(
                     )
                     Text("운전 중에는 화면과 소리가 없어요.", style = OstType.Body.copy(color = Ost.TextSub))
                 }
+            }
+        }
+
+        // 시안에 없던 줄: 인수인계 확정 사항 '홈 화면과 도착 화면에 가상 주행 샘플 들어보기' (심사용 데모, 출품 빌드 전용)
+        if (onOpenDemo != null) {
+            Spacer(Modifier.height(24.dp))
+            Row(
+                Modifier.fillMaxWidth().height(64.dp).dashedBorder(Ost.Yellow, 18.dp).clip(RoundedCornerShape(18.dp))
+                    .clickable(onClick = onOpenDemo).padding(horizontal = 28.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("심사용 데모 · 출품 빌드 전용", style = OstType.Caption.copy(color = Ost.Yellow, fontWeight = FontWeight.Bold))
+                Spacer(Modifier.size(28.dp))
+                OstIcon(R.drawable.ic_play, Ost.Yellow, 22.dp)
+                Spacer(Modifier.size(12.dp))
+                Text("가상 주행 샘플 들어보기", style = OstType.Button)
+                Spacer(Modifier.size(20.dp))
+                Text("장르별 완성 트랙 10곡 · 지금 만들기", style = OstType.Caption)
             }
         }
     }

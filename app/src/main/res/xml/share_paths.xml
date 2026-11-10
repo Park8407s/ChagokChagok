@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 공유할 수 있는 곡 파일 위치 (FileProvider). 운전으로 만든 곡과 데모 곡(tracks), 내장 샘플 사본(samples) -->
+<paths>
+    <files-path name="tracks" path="tracks/" />
+    <files-path name="samples" path="samples/" />
+</paths>
