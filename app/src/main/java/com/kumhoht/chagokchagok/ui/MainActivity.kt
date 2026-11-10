@@ -201,7 +201,8 @@ class MainActivity : ComponentActivity() {
                 )
             }
             Screen.DEMO -> DemoScreen(
-                smooth = demoUi(genre, Drive.SMOOTH), rough = demoUi(genre, Drive.ROUGH),
+                // 위쪽 카드 그래프 = 마지막으로 재생한 장르(없으면 팝)의 실제 악보 → 장르 5 × A/B 10가지가 모두 다르게 보인다
+                smooth = demoUi(demoSample?.first ?: Genre.POP, Drive.SMOOTH), rough = demoUi(demoSample?.first ?: Genre.POP, Drive.ROUGH),
                 drive = demoDrive, onDrive = { demoDrive = it },
                 sample = demoSample,
                 // 재생하는 트랙의 주행(A/B)에 맞춰 위쪽 카드 선택도 바뀐다 (8-2 동작 정의 2)

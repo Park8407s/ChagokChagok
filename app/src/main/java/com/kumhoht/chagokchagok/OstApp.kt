@@ -41,7 +41,9 @@ class OstApp : Application() {
         set(v) = prefs.edit().putString("genre", v.name).apply()
 
     var barMode: BarMode
-        get() = BarMode.entries.firstOrNull { it.name == prefs.getString("barMode", null) } ?: BarMode.NORMAL
+        // 출품 빌드(데모 켬)는 시연 시간에 맞춰 데모 모드(주행 5초 = 1마디)가 기본, 서비스 빌드는 기본 모드
+        get() = BarMode.entries.firstOrNull { it.name == prefs.getString("barMode", null) }
+            ?: if (BuildConfig.DEMO_ENABLED) BarMode.DEMO else BarMode.NORMAL
         set(v) = prefs.edit().putString("barMode", v.name).apply()
 
     override fun onCreate() {

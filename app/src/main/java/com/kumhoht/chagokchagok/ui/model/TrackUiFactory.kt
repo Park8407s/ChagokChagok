@@ -3,7 +3,11 @@ package com.kumhoht.chagokchagok.ui.model
 import com.kumhoht.chagokchagok.core.model.Genre
 import com.kumhoht.chagokchagok.engine.session.Bar
 import com.kumhoht.chagokchagok.engine.session.BarEvent
+import com.kumhoht.chagokchagok.engine.composer.Composer
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.max
+import kotlin.math.pow
 
 /**
  * 엔진이 쓴 마디 목록으로 화면용 TrackUi 를 만든다 (타임라인·곡 해설·마지막 화음 문구).
@@ -11,21 +15,51 @@ import kotlin.math.roundToInt
  */
 object TrackUiFactory {
 
-    /** 시안 막대 높이(px)/속도 비율 ≈ 2.1, 그래프 최대 높이 288 */
-    private fun level(speed: Int) = (speed * 2.1f / 288f).coerceIn(0.06f, 1f)
+    /**
+     * 막대 높이 = 그 마디에서 실제로 연주되는 소리의 양 (작곡 엔진이 만든 악보를 다시 계산).
+     * 음마다 세기(velocity) × 길이를 마디별로 더하고, 곡에서 가장 큰 마디를 1 로 맞춘다.
+     * 그래서 같은 운전이라도 장르마다 (악기 수·리듬이 달라) 모양이 다르고, A/B 운전에 따라서도 달라진다.
+     * 같은 장르·같은 마디면 항상 같은 악보라 결과를 기억해 둔다 (화면이 다시 그려질 때마다 작곡하지 않게).
+     */
+    private val levelCache = object : LinkedHashMap<Pair<Genre, List<Bar>>, FloatArray>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<Genre, List<Bar>>, FloatArray>) = size > 24
+    }
+
+    @Synchronized
+    private fun scoreLevels(genre: Genre, bars: List<Bar>): FloatArray = levelCache.getOrPut(genre to bars) {
+        val score = runCatching { Composer.compose(genre, bars) }.getOrNull() ?: return@getOrPut FloatArray(bars.size) { 0.3f }
+        val barLen = 240.0 / score.bpm
+        val energy = DoubleArray(bars.size)
+        for (t in score.tracks) for (n in t.notes) {
+            // 길게 끄는 음(마지막 화음 등)은 걸친 마디마다 그 시간만큼 나눠 담는다. 드럼은 짧아서 한 번 칠 때 0.15마디로 본다
+            val w = if (t.isDrum) 0.6 else 1.0
+            val end = if (t.isDrum) n.start + barLen * 0.15 else n.end
+            var i = (n.start / barLen).toInt()
+            while (i in energy.indices && i * barLen < end) {
+                val overlap = min(end, (i + 1) * barLen) - max(n.start, i * barLen)
+                if (overlap > 0) energy[i] += n.velocity * overlap * w
+                i++
+            }
+        }
+        // 위쪽 10% 마디를 최대로 보고(한두 마디가 튀어도 나머지가 납작해지지 않게), 1.6제곱으로 대비를 키운다
+        val top = energy.sorted().let { it[(it.size * 0.9).toInt().coerceAtMost(it.size - 1)] }.takeIf { it > 0 } ?: 1.0
+        FloatArray(bars.size) { i -> (energy[i] / top).pow(1.6).toFloat().coerceIn(0.05f, 1f) }
+    }
 
     fun from(
         id: Long, number: Int, title: String, genre: Genre, bars: List<Bar>,
         seconds: Double, distanceKm: Double, driveMinutes: Int,
     ): TrackUi {
-        val timeline = bars.map { b ->
+        val levels = scoreLevels(genre, bars)
+        val timeline = bars.mapIndexed { i, b ->
             val kind = when {
                 b.ev == BarEvent.INTRO || b.ev == BarEvent.OUTRO -> BarKind.IDLE
                 b.speed == 0 -> BarKind.REST
                 b.over -> BarKind.SPEEDING
                 else -> BarKind.PLAY
             }
-            val lv = when (kind) { BarKind.IDLE -> 14 / 288f; BarKind.REST -> 7 / 288f; else -> level(b.speed) }
+            // 인트로·아웃트로는 곡 끝 페이드아웃·잔향 구간이라 실제로 들리는 크기에 맞춰 낮게 (길게 끄는 마지막 화음이 솟지 않게)
+            val lv = if (kind == BarKind.IDLE) min(levels[i], 0.3f) else levels[i]
             val marker = when {
                 b.ev == BarEvent.HARD_ACCEL -> EventKind.HARD_ACCEL
                 b.ev == BarEvent.HARD_BRAKE -> EventKind.HARD_BRAKE
