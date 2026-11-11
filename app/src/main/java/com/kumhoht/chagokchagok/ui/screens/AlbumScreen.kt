@@ -104,7 +104,7 @@ fun AlbumScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Summary("가장 많이 고른 장르", month.topGenre.shortName, Modifier.width(247.dp))
-            Summary("끊김 없이 끝난 트랙", "${month.cleanTracks} / ${month.trackCount}", Modifier.width(248.dp))
+            Summary("끊김 없는 트랙", "${month.cleanTracks} / ${month.trackCount}", Modifier.width(248.dp))
             Summary("가장 긴 트랙", "${month.longestTitle} · ${formatDuration(month.longestSeconds)}", Modifier)
         }
         Spacer(Modifier.height(35.dp))

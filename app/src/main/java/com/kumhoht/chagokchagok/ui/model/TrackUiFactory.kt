@@ -103,9 +103,21 @@ object TrackUiFactory {
             distanceKm = distanceKm, driveMinutes = driveMinutes, bars = bars.size, seconds = seconds.roundToInt(),
             timeline = timeline, labels = labels, notes = notes,
             endingTitle = if (good) "밝게 끝났어요" else "조금 아쉽게 끝났어요",
-            endingBody = if (good) "급가속·급제동 없이 도착해서\n곡이 깔끔하게 마무리됐어요." else "다음엔 천천히 출발해 보세요.\n곡이 더 부드럽게 끝나요.",
+            endingBody = endingBody(accel, brake, over),
             hardAccel = accel, hardBrake = brake, speedingSections = over,
         )
+    }
+
+    /**
+     * 도착 화면 한 줄 안내 (기획 확정안). 마지막 화음 판정(급가속+급제동 ≤ 1, 과속 0)과 같은 기준으로 나눈다.
+     * 아쉽게 끝난 이유가 여럿이면 제한속도 초과 → 급제동 → 급가속 순으로 하나만, 급제동·급가속 횟수가 같으면 급제동.
+     */
+    internal fun endingBody(accel: Int, brake: Int, over: Int): String = when {
+        over == 0 && accel + brake == 0 -> "급가속·급제동 없이 도착해\n곡이 깔끔하게 마무리됐어요."
+        over == 0 && accel + brake == 1 -> "한 번 흔들렸지만\n곡이 깔끔하게 마무리됐어요."
+        over > 0 -> "제한속도를 지키면\n곡이 더 안정적으로 흘러요."
+        brake >= accel -> "미리 속도를 줄여 보세요.\n음악이 끊기지 않아요."
+        else -> "다음엔 천천히 출발해 보세요.\n곡이 더 부드럽게 끝나요."
     }
 
     /** 이름표끼리 겹치지 않게 (4마디 이내면 앞의 것만) */

@@ -54,7 +54,7 @@ object SampleData {
             TrackNote(EventKind.TURN_RIGHT, "깜빡이 두 번이 반짝이는 소리로 들어갔어요."),
         ),
         endingTitle = "밝게 끝났어요",
-        endingBody = "급가속·급제동 없이 도착해서\n곡이 깔끔하게 마무리됐어요.",
+        endingBody = "급가속·급제동 없이 도착해\n곡이 깔끔하게 마무리됐어요.",
     )
 
     fun roughTrack(genre: Genre = Genre.POP) = TrackUi(
