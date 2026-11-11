@@ -209,7 +209,7 @@ private fun About(onSynthTest: (() -> Unit)?, synthStatus: String?, onShutdown: 
     Spacer(Modifier.height(40.dp))
     ActionCard(
         title = "차곡차곡 끄기",
-        body = "운전 기록을 멈추고 앱을 닫아요. 꺼져 있는 동안 운전한 기록은 곡이 되지 않아요.\n앱을 다시 열거나 다음에 시동을 켜면 다시 켜져요.",
+        body = "운전 기록을 멈추고 앱을 닫아요. 꺼져 있는 동안 운전한 기록은 곡이 되지 않아요.\n앱을 다시 열면 다시 켜져요.",
         button = "끄기",
         onClick = { ask = true },
     )

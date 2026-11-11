@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -135,7 +134,7 @@ class DriveService : Service() {
 
         /**
          * 앱 끄기: 기록 서비스를 멈추고 차량 신호 수신·재생을 끊은 뒤 앱을 완전히 닫는다.
-         * 앱을 다시 열거나 다음 시동(부팅) 때 다시 켜진다. (붕붕냥과 같은 방식)
+         * 앱을 다시 열면 다시 켜진다. 시동(부팅) 때 저절로 켜지지 않는다.
          */
         fun shutdown(activity: android.app.Activity) {
             Log.i(TAG, "앱 끄기")
@@ -158,9 +157,3 @@ class DriveService : Service() {
     }
 }
 
-/** 차량 시동(부팅) 시 기록 서비스 시작 */
-class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) DriveService.start(context)
-    }
-}

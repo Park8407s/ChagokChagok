@@ -104,10 +104,11 @@ adb logcat -s Telemetry DriveService TrackMaker OstPlayer
 
 **차량 미디어 연동**: 재생 중인 곡은 미디어 세션으로 차량에 알려집니다 (`OstMediaService`). 핸들·미디어 버튼으로 재생/일시정지/다음 곡/멈춤을 할 수 있고, 다음 곡은 월간 OST 이어 듣기에서 동작합니다.
 
+- **주행 기록은 앱을 한 번 열면 시작됩니다.** 시동(부팅) 때 저절로 켜지지 않습니다. 앱을 연 뒤에는 다른 화면으로 나가 백그라운드에 있어도 기록 서비스가 계속 돌아, 운전을 시작하면 기록하고 도착하면 곡을 만듭니다. 시스템이 서비스를 종료하면 다시 살아나며, 이때 중단 전 기록은 이어지지 않습니다.
 - **30초 미만 운행은 곡을 만들지 않습니다** (인수인계 문서의 기획값 2분에서 출품 기준 30초로 변경. 값은 `TrackRules.MIN_DRIVE_SECONDS` 한 곳). 홈 안내 카드에 적혀 있고, 짧게 운전하고 도착하면 홈에 "N초 운전했어요…" 안내가 뜹니다.
 - 재생 버튼은 상태를 표시합니다: 멈춤 `▶ 다시 듣기` / 곡 만드는 중 `준비 중…` / 재생 중 노란 `⏸ 멈추기`.
 - **데이터 초기화** (설정 → 개인정보): 트랙·곡 파일·장르·마디 모드 설정을 지웁니다. 주차 중에만, 확인 창을 거쳐 실행됩니다.
-- **앱 끄기** (설정 → 앱 정보): 기록 서비스와 재생을 멈추고 앱을 닫습니다. 앱을 다시 열거나 다음 시동 때 다시 켜집니다.
+- **앱 끄기** (설정 → 앱 정보): 기록 서비스와 재생을 멈추고 앱을 닫습니다. 앱을 다시 열면 다시 켜집니다.
 - 저장된 트랙이 없으면 홈·앨범은 시안의 예시 데이터를 보여 줍니다.
 
 ### 기본 모드 / 데모 모드 (설정 → 곡 만들기)
@@ -187,7 +188,7 @@ app/src/main/java/com/kumhoht/todaysost/
   OstApp.kt          앱 전체 객체 (DB·차량 신호·재생기·설정), 디버그 SIM 브로드캐스트
   core/model/        장르·BPM, 마디 모드(기본 40초/데모 5초), 최소 운행 시간 30초
   vehicle/           Telemetry: 차속·기어(AAOS), 브레이크·깜빡이(Pleos), 제한속도(NaviHelper), 주행 규제
-  recorder/          DriveService: 1초 기록 Foreground Service, 도착 시 작곡·저장·재생, 앱 끄기, BootReceiver
+  recorder/          DriveService: 1초 기록 Foreground Service, 도착 시 작곡·저장·재생, 앱 끄기
   engine/session/    DriveSession(drive_session.py 포팅: 마디 나누기), DriveRecorder(운행 시작·끝·최소 시간 판정)
   engine/composer/   ComposerV3(drive_music_v3.py 포팅), KidsComposerV2(동요, v2), PyRandom(Python 난수), 시연 시나리오
   engine/synth/      FluidSynth JNI(OfflineRenderer), ScoreRenderer(악보 → 이벤트), Mastering
